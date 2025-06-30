@@ -1,0 +1,6 @@
+{
+  "enabled": true,
+  "bot": false,
+  "channelId": "1389301652686639298",
+  "format": "👀 Users : %count%"
+}

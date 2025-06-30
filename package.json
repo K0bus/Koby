@@ -1,0 +1,25 @@
+{
+  "name": "koby",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts --include src/*.ts",
+    "build": "tsc",
+    "start": "node .",
+    "commands:register": "tsx src/register-commands.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "discord.js": "^14.20.0",
+    "dotenv": "^16.5.0",
+    "moviedb-promise": "^4.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.3",
+    "tsx": "^4.20.3"
+  }
+}

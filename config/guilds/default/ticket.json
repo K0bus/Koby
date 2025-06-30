@@ -1,0 +1,14 @@
+{
+  "enabled": false,
+  "open_category": 0,
+  "archive_category": 0,
+  "menu_message" : "none",
+  "welcome_message" : "none",
+  "categories": [
+    {
+      "name": "Report",
+      "emoji": "",
+      "ticket_format": "%emoji% | "
+    }
+  ]
+}
