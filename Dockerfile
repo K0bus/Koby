@@ -14,7 +14,7 @@ FROM node:22-alpine
 WORKDIR /app
 
 # Copie uniquement les fichiers nécessaires
-COPY package.json package-lock.json ./
+COPY package.json ./
 COPY --from=builder /app/dist ./dist
 
 # Installe seulement les dépendances de prod
