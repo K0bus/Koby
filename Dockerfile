@@ -1,18 +1,26 @@
-# Étape 1 : build en TypeScript
-FROM node:22-alpine AS builder
+# Étape 1 : build TypeScript
+FROM node:22-alpine AS build
 
 WORKDIR /app
-COPY . .
+
+# Copie des fichiers de configuration et de code
+COPY package*.json ./
+COPY tsconfig.json ./
+COPY src ./src
+COPY config ./config
+
+# Installation des dépendances
 RUN npm i
-RUN npm run build
 
-# Étape 2 : exécution
-FROM node:22-alpine AS runner
+# Étape 2 : image finale allégée
+FROM node:22-alpine
 
 WORKDIR /app
-COPY --from=builder /app/dist ./dist
-COPY package.json ./
-RUN npm install --omit=dev
 
-ENV NODE_ENV=production
-CMD ["node", "./dist/index.js"]
+# Copie uniquement ce qui est nécessaire pour exécuter
+COPY --from=build /app/package*.json ./
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/config ./config
+
+# Lancement du bot
+CMD ["npm", "run", "dev"]
