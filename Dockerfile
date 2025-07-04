@@ -3,7 +3,7 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 COPY . .
-COPY bots_example.json bots.json
+COPY bots_default.json bots.json
 
 # Installe toutes les dépendances, y compris dev
 RUN npm i
