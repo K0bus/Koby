@@ -9,7 +9,7 @@ export function parseMessage(
     parser: Parser): MessageCreateOptions {
     message.content = parser(message.content, member);
     const newEmbeds: APIEmbed[] = [];
-    message.embeds?.forEach((embed: APIEmbed | JSONEncodable<APIEmbed>, id: number) => {
+    message.embeds?.forEach((embed: APIEmbed | JSONEncodable<APIEmbed>) => {
         let apiEmbed: APIEmbed;
 
         if ("toJSON" in embed && typeof embed.toJSON === "function") {

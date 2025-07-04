@@ -1,6 +1,6 @@
 import {
   Events,
-  GuildMember, Message, MessageCreateOptions, APIEmbed, JSONEncodable
+  GuildMember, MessageCreateOptions
 } from "discord.js";
 
 import { BotModule } from "../types/BotTypes";

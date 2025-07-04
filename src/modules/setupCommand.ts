@@ -5,12 +5,10 @@ import {
     SlashCommandBuilder, StringSelectMenuBuilder, TextInputBuilder, TextInputStyle
 } from "discord.js";
 
-import { MovieDb } from "moviedb-promise";
-
 import { BotModule } from "../types/BotTypes";
 import {ConfigManager} from "../utils/ConfigManager";
 import {WelcomeConfig} from "./welcomeMessages";
-import MemberCounter, {CounterConfig} from "./memberCounter";
+import {CounterConfig} from "./memberCounter";
 import {AutoVoiceConfig} from "./autoVoice";
 
 const simpleCommands: BotModule = {
