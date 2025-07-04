@@ -1,7 +1,8 @@
 import { Client, GatewayIntentBits, Events, Partials } from "discord.js";
 import { loadModules } from "./utils/loadModules";
+import {Bot} from "./types/BotTypes";
 
-export function createClient(bot: any) {
+export function createClient(bot: Bot) {
   const client = new Client({ 
     intents: [
         GatewayIntentBits.Guilds,
@@ -18,7 +19,9 @@ export function createClient(bot: any) {
     console.log(`✅ Connecté en tant que ${c.user.tag}`);
   });
 
-  client.login(bot.token);
+  client.login(bot.token).catch(() => {
+      console.log("Can't login to discord for bot " + bot.name);
+  });
   
   loadModules(client);
 

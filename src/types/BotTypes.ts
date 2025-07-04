@@ -6,6 +6,12 @@ import {
     SharedSlashCommand,
 } from "discord.js";
 
+export type Bot = {
+    name: string,
+    token: string,
+    client_id: string
+}
+
 export type BotModule = {
     name: string,
     commands: BotCommand[],
