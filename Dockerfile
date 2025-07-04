@@ -10,7 +10,7 @@ COPY src ./src
 COPY config ./config
 
 # Installation des dépendances
-RUN npm ci
+RUN npm i
 
 # Étape 2 : image finale allégée
 FROM node:22-alpine
