@@ -1,16 +1,17 @@
 import {
   Events,
-  GuildMember,
+  GuildMember, Message, MessageCreateOptions, APIEmbed, JSONEncodable
 } from "discord.js";
 
 import { BotModule } from "../types/BotTypes";
 import {ConfigManager} from "../utils/ConfigManager";
+import {parseMessage} from "../utils/Parser";
 
-type WelcomeConfig = {
+export type WelcomeConfig = {
   enabled: boolean;
   bot: boolean;
   channelId: string;
-  message: string;
+  message: MessageCreateOptions;
 };
 
 
@@ -30,14 +31,20 @@ const welcomeMessage: BotModule = {
           const channel = member.guild.channels.cache.get(config.channelId);
           if(channel?.isTextBased())
           {
-            await channel.send(config.message.replace("%userid%", member.user.id))
+            await channel.send(parseMessage(config.message, member, parseString))
           }
-          await welcomeChannel.send(`👋 Bienvenue ${member.user.tag} !`);
         }
       },
       once: false,
     },
   ],
 };
+
+function parseString(text: string | undefined, member: GuildMember): string | undefined {
+  if(text) {
+    text.replace("%userid%", member.user.id)
+  }
+  return text;
+}
 
 export default welcomeMessage;

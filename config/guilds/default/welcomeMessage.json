@@ -2,5 +2,10 @@
   "enabled": true,
   "bot": false,
   "channelId": "1384641929337114686",
-  "message": "Bienvenue <@%userid%>!"
+  "message": {
+    "content": "Bienvenue <@%userid%>!",
+    "tts": false,
+    "embeds": [],
+    "components": []
+  }
 }
