@@ -7,7 +7,7 @@ import {
 import { BotModule } from "../types/BotTypes";
 import {ConfigManager} from "../utils/ConfigManager";
 
-type AutoVoiceConfig = {
+export type AutoVoiceConfig = {
   enabled: boolean;
   channelsIds: string[];
   tempCategory: string;
@@ -38,6 +38,22 @@ const autoVoice: BotModule = {
                 permissionOverwrites: [],
               })
               await newVoiceState.setChannel(tempVoice);
+              tempVoice.send({
+                embeds: [
+                  {
+                    title: "🧩 Salon vocal temporaire créé",
+                    fields: [
+                      { name: "Salon", value: `<#${tempVoice.id}>`, inline: true },
+                      { name: "Propriétaire", value: `<@${newVoiceState.member!.id}>`, inline: true },
+                      { name: "ID", value: `\`${tempVoice.id}\``, inline: false },
+                    ],
+                    timestamp: new Date().toISOString(),
+                    color: 0x00aaff,
+                  },
+                ],
+              }).then((message) => {
+                message.pin()
+              });
             }
           }
         }
