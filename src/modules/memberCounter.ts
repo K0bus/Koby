@@ -10,7 +10,7 @@ import {
 import { BotModule } from "../types/BotTypes";
 import {ConfigManager} from "../utils/ConfigManager";
 
-type CounterConfig = {
+export type CounterConfig = {
   enabled: boolean;
   bot: boolean;
   channelId: string;
