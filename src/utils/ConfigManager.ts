@@ -21,11 +21,13 @@ export class ConfigManager {
         throw new Error(`Configuration introuvable pour le module "${moduleName}"`);
     }
 
-    static saveConfig<T extends ModuleConfig>(moduleName: string, guildId: string, config: T): void {
-        const folder = path.join(basePath, guildId);
-        if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
+    static saveConfig<T extends ModuleConfig>(moduleName: string, guildId: string | undefined, config: string): void {
+        if(guildId){
+            const folder = path.join(basePath, guildId);
+            if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
 
-        const filePath = path.join(folder, `${moduleName}.json`);
-        fs.writeFileSync(filePath, JSON.stringify(config, null, 2));
+            const filePath = path.join(folder, `${moduleName}.json`);
+            fs.writeFileSync(filePath, JSON.stringify(config, null, 2));
+        }
     }
 }
