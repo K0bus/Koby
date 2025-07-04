@@ -1,8 +1,9 @@
 # Étape 1 : build
-FROM node:22-alpine as builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 COPY . .
+COPY bots_example.json bots.json
 
 # Installe toutes les dépendances, y compris dev
 RUN npm i
