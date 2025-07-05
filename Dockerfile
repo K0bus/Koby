@@ -1,60 +1,37 @@
-# Multi-stage build pour optimiser l'image finale
+# Étape 1 : Compilation TypeScript
 FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copier les fichiers de configuration de package
+# Copie des fichiers nécessaires à l'installation
 COPY package*.json ./
-COPY tsconfig.json ./
+RUN npm ci
 
-# Installer les dépendances
-RUN npm ci --only=production --silent
+# Copie des sources
+COPY . .
 
-# Copier le code source
-COPY src ./src
-
-# Compiler TypeScript
+# Compilation TypeScript
 RUN npm run build
 
-# Image finale de production
-FROM node:22-alpine
 
-# Créer un utilisateur non-root pour la sécurité
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S koby -u 1001
+# Étape 2 : Conteneur final d'exécution
+FROM node:22-alpine
 
 WORKDIR /app
 
-# Copier les fichiers nécessaires depuis l'étape de build
-COPY --from=builder /app/node_modules ./node_modules
+# Copie des fichiers nécessaires à l'exécution
+COPY package*.json ./
+RUN npm install --omit=dev
+
+# Copie du code compilé uniquement
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package*.json ./
 
-# Copier les fichiers de configuration par défaut
-COPY config/guilds/default ./config/guilds/default
-COPY config/bots_default.json ./config/bots_default.json
+# Copie des fichiers de configuration par défaut
+COPY --from=builder /app/config/bots_default.json ./config/bots.json
+COPY --from=builder /app/config/guilds_default ./config/guilds_default
 
-# Créer les répertoires nécessaires avec les bonnes permissions
-RUN mkdir -p /app/config/guilds /app/data /app/logs && \
-    chown -R koby:nodejs /app
-
-# Script d'initialisation
-COPY --chown=koby:nodejs docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-# Utiliser l'utilisateur non-root
-USER koby
-
-# Variables d'environnement
+# Configuration d'environnement
 ENV NODE_ENV=production
-ENV TZ=Europe/Paris
 
-# Exposition du port (si nécessaire pour des API futures)
-EXPOSE 3000
-
-# Volumes pour la persistance des données
-VOLUME ["/app/config", "/app/data", "/app/logs"]
-
-# Point d'entrée
-ENTRYPOINT ["docker-entrypoint.sh"]
+# Commande de démarrage
 CMD ["node", "./dist/index.js"]

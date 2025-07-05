@@ -1,93 +1,14 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  koby-bot:
-    image: koby-bot:latest
+  koby:
     container_name: koby-bot
+    build:
+      context: .            # <- Chemin du dépôt cloné par Portainer
+      dockerfile: Dockerfile
     restart: unless-stopped
+    working_dir: /app
 
-    # Variables d'environnement
-    environment:
-      - NODE_ENV=production
-      - TZ=Europe/Paris
-
-    # Volumes pour la persistance des données
+    # Volumes montés pour persistance des configs
     volumes:
-      # Configuration persistante (séparée du code)
-      - koby-config:/app/config
-      # Données de l'application
-      - koby-data:/app/data
-      # Logs
-      - koby-logs:/app/logs
-
-    # Limites de ressources
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.1'
-          memory: 128M
-
-    # Configuration des logs
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-    # Santé du conteneur
-    healthcheck:
-      test: ["CMD", "node", "-e", "process.exit(0)"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-    # Réseau
-    networks:
-      - koby-network
-
-  # Service optionnel pour monitoring/logs
-  # Uncomment if needed
-  # watchtower:
-  #   image: containrrr/watchtower
-  #   container_name: koby-watchtower
-  #   restart: unless-stopped
-  #   environment:
-  #     - WATCHTOWER_CLEANUP=true
-  #     - WATCHTOWER_SCHEDULE=0 0 2 * * *  # 2h du matin tous les jours
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   depends_on:
-  #     - koby-bot
-  #   networks:
-  #     - koby-network
-
-# Volumes nommés pour la persistance
-volumes:
-  koby-config:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./volumes/config
-  koby-data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./volumes/data
-  koby-logs:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./volumes/logs
-
-# Réseau
-networks:
-  koby-network:
-    driver: bridge
-    name: koby-network
+      - ./config:/app/config

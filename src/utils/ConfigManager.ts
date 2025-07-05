@@ -2,12 +2,12 @@ import fs from "fs";
 import path from "path";
 import { ModuleConfig } from "../types/ModuleConfig";
 
-const basePath = path.join(__dirname, "../../config/guilds");
+const basePath = path.join(__dirname, "../../config");
 
 export class ConfigManager {
     static getConfig<T extends ModuleConfig>(moduleName: string, guildId?: string): T {
-        const defaultPath = path.join(basePath, "default", `${moduleName}.json`);
-        const guildPath = guildId ? path.join(basePath, guildId, `${moduleName}.json`) : null;
+        const defaultPath = path.join(basePath, "guilds_default", `${moduleName}.json`);
+        const guildPath = guildId ? path.join(basePath, "guilds", guildId, `${moduleName}.json`) : null;
 
         if (guildPath && fs.existsSync(guildPath)) {
             const raw = fs.readFileSync(guildPath, "utf-8");
