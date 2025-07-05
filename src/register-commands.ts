@@ -18,23 +18,24 @@ for (const file of moduleFile) {
 		commands.push(command.slashCommand.toJSON())
 	});
 }
+botConfig.forEach(bot => {
+	const rest = new REST().setToken(bot.token);
 
-const rest = new REST().setToken(botConfig[0].token);
+	(async () => {
+		try {
+			console.log(commands);
+			console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
-(async () => {
-	try {
-		console.log(commands);
-		console.log(`Started refreshing ${commands.length} application (/) commands.`);
+			// The put method is used to fully refresh all commands in the guild with the current set
+			const data: RESTPostAPIApplicationCommandsResult[] = await rest.put(
+				Routes.applicationCommands(bot.client_id),
+				{ body: commands },
+			) as RESTPostAPIApplicationCommandsResult[];
 
-		// The put method is used to fully refresh all commands in the guild with the current set
-		const data: RESTPostAPIApplicationCommandsResult[] = await rest.put(
-			Routes.applicationCommands(botConfig[0].client_id),
-			{ body: commands },
-		) as RESTPostAPIApplicationCommandsResult[];
-
-		console.log(`Successfully reloaded ${data.length} application (/) commands.`);
-	} catch (error) {
-		// And of course, make sure you catch and log any errors!
-		console.error(error);
-	}
-})();
+			console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+		} catch (error) {
+			// And of course, make sure you catch and log any errors!
+			console.error(error);
+		}
+	})();
+})
