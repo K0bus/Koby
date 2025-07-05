@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { ModuleConfig } from "../types/ModuleConfig";
 
-const basePath = path.join(__dirname, "../../config");
+const basePath = path.join(__dirname.replace("dist/", ""), "../../config");
 
 export class ConfigManager {
     static getConfig<T extends ModuleConfig>(moduleName: string, guildId?: string): T {
