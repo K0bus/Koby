@@ -12,6 +12,7 @@ COPY . .
 
 # Compilation TypeScript
 RUN npm run build
+RUN npm run commands:register
 
 
 # Étape 2 : Conteneur final d'exécution
