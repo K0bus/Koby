@@ -1,66 +1,79 @@
-# Fichiers et dossiers à ignorer lors du build Docker
+# Fichiers et dossiers à ignorer lors du build Docker pour Portainer
 
-# Dépendances
+# Dépendances et cache
 node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+package-lock.json
+.npm
 
-# Fichiers de développement
-.env
+# Fichiers de développement et environnement
+.env*
+!.env.example
+
+# Logs et données temporaires
+logs/
+*.log
+dist/
+build/
+.cache
+.parcel-cache
+
+# Configuration personnalisée (sera gérée par les volumes)
+config/bots.json
+config/guilds/*/
+!config/guilds/default/
+
+# Fichiers de l'IDE et système
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Contrôle de version
+.git/
+.gitignore
+.gitattributes
+
+# Scripts et documentation
+deploy.sh
+update.sh
+scripts/
+README.md
+docs/
+*.md
+
+# Fichiers de test
+test/
+tests/
+*.test.js
+*.spec.js
+coverage/
+
+# Fichiers de sauvegarde et données
+backups/
+data/
+volumes/
+
+# Fichiers de configuration Docker alternatifs
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile.dev
+.dockerignore
+
+# Fichiers de lock et temporaires
+.update.lock
+*.tmp
+*.temp
+
+# Fichiers de configuration locale
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# Logs
-logs
-*.log
-
-# Configuration locale
-config/bots.json
-
-# Fichiers de build
-dist
-build
-
-# Fichiers de cache
-.cache
-.parcel-cache
-
-# Fichiers d'IDE
-.vscode
-.idea
-*.swp
-*.swo
-
-# Fichiers système
-.DS_Store
-Thumbs.db
-
-# Git
-.git
-.gitignore
-
-# Docker
-Dockerfile
-docker-compose.yml
-.dockerignore
-
-# Scripts de déploiement
-deploy.sh
-scripts/
-
-# Backups
-backups/
-data/
-
-# Documentation
-README.md
-docs/
-
-# Tests
-test/
-tests/
-*.test.js
-*.spec.js
+# Makefile et scripts de déploiement
+Makefile
