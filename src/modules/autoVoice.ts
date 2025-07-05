@@ -51,8 +51,6 @@ const autoVoice: BotModule = {
                     color: 0x00aaff,
                   },
                 ],
-              }).then((message) => {
-                message.pin()
               });
             }
           }
