@@ -28,6 +28,7 @@ COPY --from=builder /app/dist ./dist
 
 # Copie des fichiers de configuration par défaut
 COPY --from=builder /app/config/bots_default.json ./config/bots.json
+COPY --from=builder /app/config/guilds ./config/guilds
 COPY --from=builder /app/config/guilds_default ./config/guilds_default
 
 # Configuration d'environnement
