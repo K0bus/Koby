@@ -34,4 +34,4 @@ COPY --from=builder /app/config/guilds_default ./config/guilds_default
 ENV NODE_ENV=production
 
 # Commande de démarrage
-CMD ["node", "./dist/index.js"]
+CMD ["node", "./dist/src/index.js"]
