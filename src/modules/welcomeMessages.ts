@@ -34,6 +34,7 @@ const welcomeMessage: BotModule = {
             if(interaction.member)
             {
               await sendWelcome(<GuildMember>interaction.member)
+              await interaction.reply("Welcome message sent !")
             }
           }
         }
@@ -69,6 +70,11 @@ async function sendWelcome(member: GuildMember) {
 function parseString(text: string | undefined, member: GuildMember): string | undefined {
   if(text) {
     text = text.replace("%userid%", member.user.id)
+    text = text.replace("%username%", member.user.displayName)
+    if(member.user.avatarURL)
+    {
+      text = text.replace("%user_avatar%", member.user.avatarURL.toString)
+    }
   }
   return text;
 }
