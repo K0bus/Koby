@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Events, Partials } from "discord.js";
+import { Client, GatewayIntentBits, Events, Partials, ActivityType } from "discord.js";
 import { loadModules } from "./utils/loadModules";
 import {Bot} from "./types/BotTypes";
 
@@ -17,6 +17,10 @@ export function createClient(bot: Bot) {
 
   client.once(Events.ClientReady, c => {
     console.log(`✅ Connecté en tant que ${c.user.tag}`);
+      client.user!.setActivity(
+          bot.status,
+          {type: ActivityType.Custom}
+      )
   });
 
   client.login(bot.token).catch(() => {

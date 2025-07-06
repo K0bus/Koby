@@ -9,7 +9,8 @@ import {
 export type Bot = {
     name: string,
     token: string,
-    client_id: string
+    client_id: string,
+    status: string
 }
 
 export type BotModule = {
