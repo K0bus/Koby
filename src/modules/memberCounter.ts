@@ -29,8 +29,17 @@ const memberCounter: BotModule = {
       async execute(client: Client, interaction :ChatInputCommandInteraction) {
         if(interaction.guild != null)
         {
-          refreshCounter(interaction.guild, client).then(() => {
-            interaction.reply({content: "Member counter refreshed successfully !", flags: MessageFlags.Ephemeral})
+          refreshCounter(interaction.guild, client).then((r) => {
+            if(r === true) {
+              interaction.reply({content: "✅ Member counter refreshed successfully !", flags: MessageFlags.Ephemeral})
+            }
+            else
+            {
+              interaction.reply({
+                content: "❌ Error while refreshing member counter :" + r,
+                flags: MessageFlags.Ephemeral
+              })
+            }
           })
         }
       }
@@ -47,7 +56,7 @@ const memberCounter: BotModule = {
   ],
 };
 
-async function refreshCounter(guild: Guild, client: Client)
+async function refreshCounter(guild: Guild, client: Client) : Promise<boolean | string>
 {
   const config = ConfigManager.getConfig<CounterConfig>(
       "memberCounter",
@@ -60,13 +69,22 @@ async function refreshCounter(guild: Guild, client: Client)
     channel = <VoiceChannel> client.channels.cache.get(config.channelId);
     if(channel)
     {
-      await channel.setName(config.format.replace("%count%", humanCount.toString()));
+      let newName = config.format.replace("%count%", humanCount.toString());
+      if(channel.name !== newName) {
+        let newVoice = await channel.setName(
+            config.format.replace("%count%", humanCount.toString())
+        );
+        if(newVoice.name !== newName) return "Change fail due to too many change !"
+        return true;
+      }
+      return "Channel name still be unchanged !"
     }
     else
     {
-      console.log("Can't find channel " + config.channelId)
+      return "Can't find channel " + config.channelId
     }
   }
+  return "Unknown error";
 }
 
 export default memberCounter;
