@@ -1,4 +1,4 @@
-import { Client, Events } from "discord.js";
+import {Client, Events, MessageFlags} from "discord.js";
 import { readdirSync } from "fs";
 import path from "path";
 import { BotCommand, BotEvent, BotModule } from "../types/BotTypes";
@@ -29,7 +29,11 @@ export function loadModules(client: Client) {
                         await command.execute(client, interaction);
                     } catch (err) {
                         console.error(err);
-                        await interaction.reply({ content: "❌ Erreur lors de l'exécution de la commande.", ephemeral: true });
+                        if (!interaction.replied)
+                        await interaction.reply({
+                            content: "❌ Erreur lors de l'exécution de la commande.",
+                            flags: MessageFlags.Ephemeral
+                        });
                     }
                 });
             });
