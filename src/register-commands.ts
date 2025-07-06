@@ -18,22 +18,18 @@ for (const file of moduleFile) {
 		commands.push(command.slashCommand.toJSON())
 	});
 }
-botConfig.forEach(bot => {
-	(async () => {
-		try {
-			const rest = new REST().setToken(bot.token);
-			console.log(`[${bot.name}] Started refreshing ${commands.length} application (/) commands.`);
+for (const bot of botConfig) {
+	try {
+		const rest = new REST().setToken(bot.token);
+		console.log(`[${bot.name}] Started refreshing ${commands.length} application (/) commands.`);
 
-			// The put method is used to fully refresh all commands in the guild with the current set
-			const data: RESTPostAPIApplicationCommandsResult[] = await rest.put(
-				Routes.applicationCommands(bot.client_id),
-				{ body: commands },
-			) as RESTPostAPIApplicationCommandsResult[];
+		const data = rest.put(
+			Routes.applicationCommands(bot.client_id),
+			{body: commands}
+		) as unknown as RESTPostAPIApplicationCommandsResult[];
 
-			console.log(`[${bot.name}] Successfully reloaded ${data.length} application (/) commands.`);
-		} catch (error) {
-			// And of course, make sure you catch and log any errors!
-			console.error(error);
-		}
-	})();
-})
+		console.log(`[${bot.name}] Successfully reloaded ${data.length} application (/) commands.`);
+	} catch (error) {
+		console.error(`[${bot.name}] ❌ Error while refreshing commands:`, error);
+	}
+}
