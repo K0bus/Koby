@@ -34,7 +34,10 @@ const welcomeMessage: BotModule = {
             if(interaction.member)
             {
               await sendWelcome(<GuildMember>interaction.member)
-              await interaction.reply("Welcome message sent !")
+              await interaction.reply({
+                content: "Welcome message sent !",
+                flags: MessageFlags.Ephemeral
+              })
             }
           }
         }
@@ -54,7 +57,12 @@ const welcomeMessage: BotModule = {
 
 
 async function sendWelcome(member: GuildMember) {
-  const welcomeChannel = member.guild.systemChannel;
+  const config = ConfigManager.getConfig<WelcomeConfig>(
+      "welcomeMessage",
+      member.guild.id
+  );
+  let channels = await member.guild.channels.fetch();
+  let welcomeChannel = channels.get(config.channelId)
   if (welcomeChannel) {
     const config = ConfigManager.getConfig<WelcomeConfig>(
         "welcomeMessage",
@@ -65,6 +73,9 @@ async function sendWelcome(member: GuildMember) {
     {
       await channel.send(parseMessage(config.message, member, parseString))
     }
+  }
+  else {
+    console.log("Can't find channel " + config.channelId)
   }
 }
 function parseString(text: string | undefined, member: GuildMember): string | undefined {
