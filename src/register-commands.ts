@@ -19,10 +19,9 @@ for (const file of moduleFile) {
 	});
 }
 botConfig.forEach(bot => {
-	const rest = new REST().setToken(bot.token);
-
 	(async () => {
 		try {
+			const rest = new REST().setToken(bot.token);
 			console.log(`[${bot.name}] Started refreshing ${commands.length} application (/) commands.`);
 
 			// The put method is used to fully refresh all commands in the guild with the current set
