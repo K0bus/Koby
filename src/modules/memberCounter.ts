@@ -54,20 +54,13 @@ async function refreshCounter(guild: Guild, client: Client)
       guild.id
   );
   if(config.enabled) {
-    let size:number;
-    if(config.bot)
-    {
-      size = guild.members.cache.filter(member => !member.user.bot).size
-    }
-    else
-    {
-      size = guild.members.cache.size
-    }
+    const members = await guild!.members.fetch();
+    const humanCount = members.filter(m => !m.user.bot).size;
     let channel: VoiceChannel;
     channel = <VoiceChannel> client.channels.cache.get(config.channelId);
     if(channel)
     {
-      await channel.setName(config.format.replace("%count%", size.toString()));
+      await channel.setName(config.format.replace("%count%", humanCount.toString()));
     }
     else
     {
