@@ -1,11 +1,12 @@
 import {
   Events,
   GuildMember,
-  Client,VoiceState, CategoryChannel, ChannelType
+  Client, VoiceState, CategoryChannel, ChannelType, VoiceChannel, StageChannel
 } from "discord.js";
 
 import { BotModule } from "../types/BotTypes";
 import {ConfigManager} from "../utils/ConfigManager";
+import {channel} from "node:diagnostics_channel";
 
 export type AutoVoiceConfig = {
   enabled: boolean;
@@ -63,6 +64,42 @@ const autoVoice: BotModule = {
             {
               await oldVoiceState.channel.delete();
             }
+            else if(category.id === config.tempCategory) {
+              const ownerIds: string = await fetchOwnerId(oldVoiceState.channel, client)
+              if(oldVoiceState.channel.members.filter((m) => {
+                m.id === ownerIds
+              }).size > 0) {
+                const first = oldVoiceState.channel.members.first();
+                if(first)
+                {
+                  const config = ConfigManager.getConfig<AutoVoiceConfig>(
+                      "autoVoice",
+                      oldVoiceState.guild.id
+                  );
+                  await oldVoiceState.channel.setName(config.format.replace("%user%", first.displayName))
+                  const messages = await oldVoiceState.channel.messages.fetch()
+                  let botMessage = messages.filter((message) => message.author.id === client.user?.id).first()
+                  if(botMessage)
+                  {
+                    let embed = botMessage.embeds[0];
+                    if(embed)
+                    {
+                      embed.fields.forEach((field) => {
+                        if(field.name === "Propriétaire")
+                          field.value = `<@${first.id}>`;
+                      })
+                      botMessage.embeds[0] = embed;
+                    }
+                    botMessage.edit({
+                      content: botMessage.content,
+                      embeds: botMessage.embeds,
+                      components: botMessage.components
+                    });
+                  }
+
+                }
+              }
+            }
           }
         }
       },
@@ -70,5 +107,24 @@ const autoVoice: BotModule = {
     },
   ],
 };
+
+async function fetchOwnerId(channel: VoiceChannel | StageChannel, client: Client): Promise<string> {
+  const messages = await channel.messages.fetch()
+  let botMessage = messages.filter((message) => message.author.id === client.user?.id).first()
+  if(botMessage)
+  {
+    let embed = botMessage.embeds[0];
+    if(embed)
+    {
+      embed.fields.forEach((field) => {
+        if(field.name === "Propriétaire")
+        {
+          return field.value.replace("<@", "").replace(">", "")
+        }
+      })
+    }
+  }
+  return "";
+}
 
 export default autoVoice;
