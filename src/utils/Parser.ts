@@ -21,7 +21,7 @@ export function parseMessage(
         apiEmbed.description = parser(apiEmbed.description, member);
         if(apiEmbed.thumbnail && apiEmbed.thumbnail.url)
         {
-            let thumbnail_url = parser(apiEmbed.description, member);
+            let thumbnail_url = parser(apiEmbed.thumbnail.url, member);
             if(!thumbnail_url) thumbnail_url = "https://archive.org/download/discordprofilepictures/discordblue.png"
             apiEmbed.thumbnail.url = thumbnail_url;
         }
