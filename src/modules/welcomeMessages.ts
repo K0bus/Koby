@@ -71,10 +71,7 @@ function parseString(text: string | undefined, member: GuildMember): string | un
   if(text) {
     text = text.replace("%userid%", member.user.id)
     text = text.replace("%username%", member.user.displayName)
-    if(member.user.avatarURL)
-    {
-      text = text.replace("%user_avatar%", member.user.avatarURL.toString)
-    }
+    text = text.replace("%user_avatar%", member.user.displayAvatarURL())
   }
   return text;
 }
