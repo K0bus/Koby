@@ -19,6 +19,12 @@ export function parseMessage(
         }
         apiEmbed.title = parser(apiEmbed.title, member);
         apiEmbed.description = parser(apiEmbed.description, member);
+        if(apiEmbed.thumbnail && apiEmbed.thumbnail.url)
+        {
+            let thumbnail_url = parser(apiEmbed.description, member);
+            if(!thumbnail_url) thumbnail_url = ""
+            apiEmbed.thumbnail.url = thumbnail_url;
+        }
         newEmbeds.push(apiEmbed);
     })
     message.embeds = newEmbeds;
