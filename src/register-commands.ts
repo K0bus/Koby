@@ -23,8 +23,7 @@ botConfig.forEach(bot => {
 
 	(async () => {
 		try {
-			console.log(commands);
-			console.log(`Started refreshing ${commands.length} application (/) commands.`);
+			console.log(`[${bot.name}] Started refreshing ${commands.length} application (/) commands.`);
 
 			// The put method is used to fully refresh all commands in the guild with the current set
 			const data: RESTPostAPIApplicationCommandsResult[] = await rest.put(
@@ -32,7 +31,7 @@ botConfig.forEach(bot => {
 				{ body: commands },
 			) as RESTPostAPIApplicationCommandsResult[];
 
-			console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+			console.log(`[${bot.name}] Successfully reloaded ${data.length} application (/) commands.`);
 		} catch (error) {
 			// And of course, make sure you catch and log any errors!
 			console.error(error);
