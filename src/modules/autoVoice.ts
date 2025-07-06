@@ -68,7 +68,7 @@ const autoVoice: BotModule = {
               const ownerIds: string = await fetchOwnerId(oldVoiceState.channel, client)
               if(oldVoiceState.channel.members.filter((m) => {
                 m.id === ownerIds
-              }).size > 0) {
+              }).size === 0) {
                 const first = oldVoiceState.channel.members.first();
                 if(first)
                 {
