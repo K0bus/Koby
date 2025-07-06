@@ -1,8 +1,8 @@
-import { REST, RESTPostAPIApplicationCommandsResult, Routes } from "discord.js";
+import {REST, RESTPostAPIApplicationCommandsResult, Routes} from "discord.js";
 import botConfig from '../config/bots.json';
 import path from "path";
-import { readdirSync } from "fs";
-import { BotCommand, BotModule } from "./types/BotTypes";
+import {readdirSync} from "fs";
+import {Bot, BotCommand, BotModule} from "./types/BotTypes";
 
 const commands: any[] = [];
 
@@ -19,17 +19,23 @@ for (const file of moduleFile) {
 	});
 }
 for (const bot of botConfig) {
+	registerCommands(bot).then((data: RESTPostAPIApplicationCommandsResult[] | undefined) => {
+		if(data)
+			console.log(`[${bot.name}] Successfully reloaded ${data.length} application (/) commands.`);
+	});
+}
+
+async function registerCommands(bot: Bot): Promise<RESTPostAPIApplicationCommandsResult[] | undefined> {
 	try {
 		const rest = new REST().setToken(bot.token);
 		console.log(`[${bot.name}] Started refreshing ${commands.length} application (/) commands.`);
 
-		const data = rest.put(
+		return await rest.put(
 			Routes.applicationCommands(bot.client_id),
 			{body: commands}
-		) as unknown as RESTPostAPIApplicationCommandsResult[];
-
-		console.log(`[${bot.name}] Successfully reloaded ${data.length} application (/) commands.`);
+		)  as RESTPostAPIApplicationCommandsResult[];
 	} catch (error) {
 		console.error(`[${bot.name}] ❌ Error while refreshing commands:`, error);
 	}
+	return undefined;
 }
