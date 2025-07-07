@@ -66,6 +66,7 @@ const modLog: BotModule = {
         {
             eventType: Events.MessageDelete,
             async execute(client, message: Message | PartialMessage) {
+                if (client.user && message.author?.id === client.user.id) return;
                 if (!message.guild) return;
                 const config = ConfigManager.getConfig<ModLogConfig>("modLog", message.guild.id);
                 const channel = message.guild.channels.cache.get(config.channelId);
@@ -81,6 +82,7 @@ const modLog: BotModule = {
         {
             eventType: Events.MessageUpdate,
             async execute(client, oldMsg: Message | PartialMessage, newMsg: Message | PartialMessage) {
+                if (client.user && oldMsg.author?.id === client.user.id) return;
                 if (!oldMsg.guild || oldMsg.content === newMsg.content) return;
                 const config = ConfigManager.getConfig<ModLogConfig>("modLog", oldMsg.guild.id);
                 const channel = oldMsg.guild.channels.cache.get(config.channelId);
