@@ -10,7 +10,7 @@ export type Bot = {
     name: string,
     token: string,
     client_id: string,
-    status: string
+    status: string | undefined,
 }
 
 export type BotModule = {

@@ -17,6 +17,7 @@ export function createClient(bot: Bot) {
 
   client.once(Events.ClientReady, c => {
     console.log(`✅ Connecté en tant que ${c.user.tag}`);
+    if(bot.status && bot.status !== "")
       client.user!.setActivity(
           bot.status,
           {type: ActivityType.Custom}
