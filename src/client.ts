@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Events, Partials, ActivityType } from "discord.js";
+import {Client, GatewayIntentBits, Events, Partials, ActivityType} from "discord.js";
 import { loadModules } from "./utils/loadModules";
 import {Bot} from "./types/BotTypes";
 
@@ -16,7 +16,8 @@ export function createClient(bot: Bot) {
     ]});
 
   client.once(Events.ClientReady, c => {
-    console.log(`✅ Connecté en tant que ${c.user.tag}`);
+    console.log(`[${c.user.tag}] ✅ Logged in`);
+    // Set status
     if(bot.status && bot.status !== "")
     {
         client.user!.setActivity(
@@ -31,7 +32,7 @@ export function createClient(bot: Bot) {
   });
 
   client.login(bot.token).catch(() => {
-      console.log("Can't login to discord for bot " + bot.name);
+      console.log(`[${bot.name}] ❌ Can't login to discord`);
   });
   
   loadModules(client);
