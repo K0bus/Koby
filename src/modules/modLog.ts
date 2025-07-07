@@ -102,7 +102,7 @@ const modLog: BotModule = {
                 const config = ConfigManager.getConfig<ModLogConfig>("modLog", channel.guild.id);
                 const logChannel = channel.guild.channels.cache.get(config.channelId);
                 if (logChannel?.isTextBased()) {
-                    await sendEmbed(logChannel, "📁 Channel créé", `#${channel instanceof TextChannel ? channel.name : "Inconnu"}`, [], 0x1abc9c);
+                    await sendEmbed(logChannel, "📁 Channel créé", `#${channel.name ? channel.name : "Inconnu"}`, [], 0x1abc9c);
                 }
             },
             once: false,
@@ -114,7 +114,7 @@ const modLog: BotModule = {
                 const config = ConfigManager.getConfig<ModLogConfig>("modLog", channel.guild.id);
                 const logChannel = channel.guild.channels.cache.get(config.channelId);
                 if (logChannel?.isTextBased()) {
-                    await sendEmbed(logChannel, "🔥 Channel supprimé", `#${channel instanceof TextChannel ? channel.name : "Inconnu"}`, [], 0xe74c3c);
+                    await sendEmbed(logChannel, "🔥 Channel supprimé", `#${channel.name ? channel.name : "Inconnu"}`, [], 0xe74c3c);
                 }
             },
             once: false,
