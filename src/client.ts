@@ -18,10 +18,16 @@ export function createClient(bot: Bot) {
   client.once(Events.ClientReady, c => {
     console.log(`✅ Connecté en tant que ${c.user.tag}`);
     if(bot.status && bot.status !== "")
-      client.user!.setActivity(
-          bot.status,
-          {type: ActivityType.Custom}
-      )
+    {
+        client.user!.setActivity(
+            bot.status,
+            {type: ActivityType.Custom}
+        )
+    }
+    // Fetch all messages
+    refreshCache(client).then(() => {
+        console.log(`[${c.user.tag}] 🔄 Refreshed cache messages`);
+    });
   });
 
   client.login(bot.token).catch(() => {
@@ -29,6 +35,21 @@ export function createClient(bot: Bot) {
   });
   
   loadModules(client);
+
+  async function refreshCache(client: Client) {
+      await client.guilds.fetch().then(() => {
+          client.guilds.cache.forEach(guild => {
+              guild.channels.fetch().then(() => {
+                  guild.channels.cache.forEach(channel => {
+                      if(channel.isTextBased())
+                      {
+                          channel.messages.fetch();
+                      }
+                  })
+              })
+          })
+      })
+  }
 
   return client;
 }
