@@ -10,7 +10,7 @@
     "commands:register": "tsx src/register-commands.ts"
   },
   "keywords": [],
-  "author": "",
+  "author": "K0bus",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
