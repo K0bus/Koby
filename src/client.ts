@@ -21,7 +21,7 @@ export function createClient(bot: Bot) {
       client.user!.setActivity(bot.status, { type: ActivityType.Custom });
     }
     // Fetch all messages
-    refreshCache(client).then(() => {
+    void refreshCache(client).then(() => {
       console.log(`[${c.user.tag}] 🔄 Refreshed cache messages`);
     });
   });
@@ -30,15 +30,15 @@ export function createClient(bot: Bot) {
     console.log(`[${bot.name}] ❌ Can't login to discord`);
   });
 
-  loadModules(client);
+  void loadModules(client);
 
   async function refreshCache(client: Client) {
     await client.guilds.fetch().then(() => {
       client.guilds.cache.forEach((guild) => {
-        guild.channels.fetch().then(() => {
+        void guild.channels.fetch().then(() => {
           guild.channels.cache.forEach((channel) => {
             if (channel.isTextBased()) {
-              channel.messages.fetch();
+              void channel.messages.fetch();
             }
           });
         });

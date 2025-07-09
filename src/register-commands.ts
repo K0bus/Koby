@@ -14,14 +14,16 @@ const moduleFile = readdirSync(foldersPath).filter(
 
 for (const file of moduleFile) {
   const eventPath = path.join(foldersPath, file);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-require-imports
   const imported = require(eventPath);
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
   const module: BotModule = imported.default ?? imported;
   module.commands.forEach((command: BotCommand) => {
     commands.push(command.slashCommand.toJSON());
   });
 }
 for (const bot of botConfig) {
-  registerCommands(bot).then((data: RESTPostAPIApplicationCommandsResult[] | undefined) => {
+  void registerCommands(bot).then((data: RESTPostAPIApplicationCommandsResult[] | undefined) => {
     if (data)
       console.log(`[${bot.name}] Successfully reloaded ${data.length} application (/) commands.`);
   });

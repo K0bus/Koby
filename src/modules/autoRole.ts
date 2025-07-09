@@ -18,7 +18,7 @@ const autoRole: BotModule = {
       eventType: Events.GuildMemberAdd,
       async execute(client, member: GuildMember) {
         try {
-          const config = await getValidatedConfig(member);
+          const config = getValidatedConfig(member);
           if (!shouldAssignRoles(member, config)) return;
           await assignRoles(member, config.rolesIds);
         } catch (error) {
@@ -30,7 +30,7 @@ const autoRole: BotModule = {
   ],
 };
 
-async function getValidatedConfig(member: GuildMember): Promise<AutoRoleConfig> {
+function getValidatedConfig(member: GuildMember): AutoRoleConfig {
   const config = ConfigManager.getConfig<AutoRoleConfig>(MODULE_NAME, member.guild.id);
   if (!config?.enabled || !Array.isArray(config.rolesIds)) {
     throw new Error("Configuration d'autorole invalide");

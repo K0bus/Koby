@@ -49,13 +49,13 @@ const simpleCommands: BotModule = {
           language: 'fr', // ISO 639-1 code
         };
 
-        mdb.searchMovie(parameters).then((data) => {
+        await mdb.searchMovie(parameters).then(async (data) => {
           console.log(data.results);
           let text: string = '';
           data.results?.forEach((data) => {
             text = `${text}## ${data.title} (${data.vote_average})\n`;
           });
-          interaction.reply({ content: text, flags: MessageFlags.Ephemeral });
+          await interaction.reply({ content: text, flags: MessageFlags.Ephemeral });
         });
       },
     },

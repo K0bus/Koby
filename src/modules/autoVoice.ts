@@ -31,7 +31,7 @@ const autoVoice: BotModule = {
     {
       eventType: Events.VoiceStateUpdate,
       async execute(client: Client, oldState: VoiceState, newState: VoiceState) {
-        const config = await getValidatedConfig(oldState.guild.id);
+        const config = getValidatedConfig(oldState.guild.id);
 
         if (newState.channel && isAutoVoiceChannel(newState.channel.id, config)) {
           await handleVoiceJoin(client, newState, config);
@@ -123,7 +123,7 @@ async function updateChannelOwnership(channel: VoiceChannel | StageChannel, clie
   const newOwner = channel.members.first();
   if (!newOwner) return;
 
-  const config = await getValidatedConfig(newOwner.guild.id);
+  const config = getValidatedConfig(newOwner.guild.id);
   await channel.setName(config.format.replace('%user%', newOwner.displayName));
 
   const messages = await channel.messages.fetch();
@@ -144,7 +144,7 @@ function isAutoVoiceChannel(channelId: string, config: AutoVoiceConfig): boolean
   return config.channelsIds.includes(channelId);
 }
 
-async function getValidatedConfig(guildId: string): Promise<AutoVoiceConfig> {
+function getValidatedConfig(guildId: string): AutoVoiceConfig {
   const config = ConfigManager.getConfig<AutoVoiceConfig>(MODULE_NAME, guildId);
   if (!config?.enabled) {
     throw new Error("Configuration d'autoVoice invalide");

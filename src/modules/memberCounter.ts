@@ -34,14 +34,14 @@ const memberCounter: BotModule = {
         .setContexts(InteractionContextType.Guild),
       async execute(client: Client, interaction: ChatInputCommandInteraction) {
         if (interaction.guild != null) {
-          refreshCounter(interaction.guild, client).then((r) => {
+          await refreshCounter(interaction.guild, client).then(async (r) => {
             if (r === true) {
-              interaction.reply({
+              await interaction.reply({
                 content: '✅ Member counter refreshed successfully !',
                 flags: MessageFlags.Ephemeral,
               });
             } else {
-              interaction.reply({
+              await interaction.reply({
                 content: '❌ Error while refreshing member counter :' + r,
                 flags: MessageFlags.Ephemeral,
               });
@@ -67,8 +67,7 @@ async function refreshCounter(guild: Guild, client: Client): Promise<boolean | s
   if (config.enabled) {
     const members = await guild.members.fetch();
     const humanCount = members.filter((m) => !m.user.bot).size;
-    let channel: VoiceChannel;
-    channel = <VoiceChannel>client.channels.cache.get(config.channelId);
+    const channel: VoiceChannel = <VoiceChannel>client.channels.cache.get(config.channelId);
     if (channel) {
       const newName = config.format.replace('%count%', humanCount.toString());
       if (channel.name !== newName) {

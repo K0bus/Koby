@@ -21,11 +21,7 @@ export class ConfigManager {
     throw new Error(`Configuration introuvable pour le module "${moduleName}"`);
   }
 
-  static saveConfig<T extends ModuleConfig>(
-    moduleName: string,
-    guildId: string | undefined,
-    config: string
-  ): void {
+  static saveConfig(moduleName: string, guildId: string | undefined, config: string): void {
     if (guildId) {
       const folder = path.join(basePath, guildId);
       if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
