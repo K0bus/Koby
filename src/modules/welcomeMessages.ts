@@ -16,31 +16,26 @@ export type WelcomeConfig = {
   message: MessageCreateOptions;
 };
 
+const MODULE_NAME = "welcomeMessage";
 
 const welcomeMessage: BotModule = {
-  name: "welcomeMessage",
+  name: MODULE_NAME,
   commands: [
     {
       slashCommand: new SlashCommandBuilder()
-          .setName("welcometest")
+          .setName(MODULE_NAME)
           .setDescription("Test your Welcome message")
           .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
           .setContexts(InteractionContextType.Guild),
       async execute(client: Client, interaction :ChatInputCommandInteraction) {
-        if(interaction.guild != null)
-        {
-          if(interaction.memberPermissions && interaction.memberPermissions.has(PermissionFlagsBits.Administrator))
-          {
-            if(interaction.member)
-            {
-              await sendWelcome(<GuildMember>interaction.member)
-              await interaction.reply({
-                content: "Welcome message sent !",
-                flags: MessageFlags.Ephemeral
-              })
-            }
-          }
-        }
+        const member = <GuildMember>interaction.member!;
+        if(!hasPermissionsAdmin(member))
+          return await sendError(interaction, "You don't have the permission to use this command !");
+        await sendWelcome(<GuildMember>interaction.member)
+        await interaction.reply({
+          content: "Welcome message sent !",
+          flags: MessageFlags.Ephemeral
+        })
       }
     }
   ],
@@ -55,17 +50,28 @@ const welcomeMessage: BotModule = {
   ],
 };
 
+function hasPermissionsAdmin(member: GuildMember) {
+  return member.permissions.has(PermissionFlagsBits.Administrator)
+}
+
+async function sendError(interaction: ChatInputCommandInteraction, error: string) {
+  await interaction.reply(error)
+}
+
 
 async function sendWelcome(member: GuildMember) {
   const config = ConfigManager.getConfig<WelcomeConfig>(
-      "welcomeMessage",
+      MODULE_NAME,
       member.guild.id
   );
-  let channels = await member.guild.channels.fetch();
-  let welcomeChannel = channels.get(config.channelId)
+
+  const channels = await member.guild.channels.fetch();
+  const welcomeChannel = channels.get(config.channelId)
+
+  if(!config.enabled) return;
   if (welcomeChannel) {
     const config = ConfigManager.getConfig<WelcomeConfig>(
-        "welcomeMessage",
+        MODULE_NAME,
         member.guild.id
     );
     const channel = member.guild.channels.cache.get(config.channelId);

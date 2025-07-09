@@ -10,15 +10,17 @@ import {
 import { BotModule } from "../types/BotTypes";
 import {ConfigManager} from "../utils/ConfigManager";
 
-export type CounterConfig = {
+interface CounterConfig {
   enabled: boolean;
   bot: boolean;
   channelId: string;
   format: string;
-};
+}
+
+const MODULE_NAME = "memberCounter";
 
 const memberCounter: BotModule = {
-  name: "memberCounter",
+  name: MODULE_NAME,
   commands: [
     {
       slashCommand: new SlashCommandBuilder()
@@ -59,7 +61,7 @@ const memberCounter: BotModule = {
 async function refreshCounter(guild: Guild, client: Client) : Promise<boolean | string>
 {
   const config = ConfigManager.getConfig<CounterConfig>(
-      "memberCounter",
+      MODULE_NAME,
       guild.id
   );
   if(config.enabled) {
