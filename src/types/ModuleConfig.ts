@@ -1,3 +1,3 @@
 export type ModuleConfig = {
-    [key: string]: any;
+  [key: string]: any;
 };

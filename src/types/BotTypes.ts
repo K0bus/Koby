@@ -1,33 +1,33 @@
 import {
-    ChatInputCommandInteraction,
-    Client,
-    ClientEvents,
-    ClientOptions,
-    SharedSlashCommand,
-} from "discord.js";
+  ChatInputCommandInteraction,
+  Client,
+  ClientEvents,
+  ClientOptions,
+  SharedSlashCommand,
+} from 'discord.js';
 
 export type Bot = {
-    name: string,
-    token: string,
-    client_id: string,
-    status: string | undefined,
-}
+  name: string;
+  token: string;
+  client_id: string;
+  status: string | undefined;
+};
 
 export type BotModule = {
-    name: string,
-    commands: BotCommand[],
-    event: BotEvent[]
-}
+  name: string;
+  commands: BotCommand[];
+  event: BotEvent[];
+};
 
 export type BotCommand = {
-    slashCommand: SharedSlashCommand,
-    execute: (client: Client, interaction: ChatInputCommandInteraction) => Promise<void>
-}
+  slashCommand: SharedSlashCommand;
+  execute: (client: Client, interaction: ChatInputCommandInteraction) => Promise<void>;
+};
 
 export type BotEvent<K extends keyof ClientEvents = keyof ClientEvents> = {
-    eventType: K;
-    execute: (client: Client, ...args: any[K]) => Promise<void>;
-    once: boolean;
+  eventType: K;
+  execute: (client: Client, ...args: any[K]) => Promise<void>;
+  once: boolean;
 };
 
 export class BotClient extends Client {

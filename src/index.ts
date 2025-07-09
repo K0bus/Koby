@@ -1,7 +1,7 @@
-import { createClient } from "./client";
-import {Bot} from "./types/BotTypes";
-import botConfig from "../config/bots.json";
+import { createClient } from './client';
+import { Bot } from './types/BotTypes';
+import botConfig from '../config/bots.json';
 
-botConfig.forEach((data:Bot) => {
-    createClient(data);
+botConfig.forEach((data: Bot) => {
+  createClient(data);
 });
