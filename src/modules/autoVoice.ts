@@ -1,130 +1,158 @@
 import {
-  Events,
-  GuildMember,
-  Client, VoiceState, CategoryChannel, ChannelType, VoiceChannel, StageChannel
+    Events,
+    GuildMember,
+    Client,
+    VoiceState,
+    CategoryChannel,
+    ChannelType,
+    VoiceChannel,
+    StageChannel,
+    EmbedBuilder
 } from "discord.js";
-
-import { BotModule } from "../types/BotTypes";
+import {BotModule} from "../types/BotTypes";
 import {ConfigManager} from "../utils/ConfigManager";
-import {channel} from "node:diagnostics_channel";
 
-export type AutoVoiceConfig = {
-  enabled: boolean;
-  channelsIds: string[];
-  tempCategory: string;
-  format: string;
-};
+interface AutoVoiceConfig {
+    enabled: boolean;
+    channelsIds: string[];
+    tempCategory: string;
+    format: string;
+}
+
+const MODULE_NAME = "autoVoice";
+const EMBED_COLOR = 0x00aaff;
+const OWNER_FIELD_CHANNEL = "Salon";
+const OWNER_FIELD_NAME = "Propriétaire";
 
 const autoVoice: BotModule = {
-  name: "autoVoice",
-  commands: [],
-  event: [
-    {
-      eventType: Events.VoiceStateUpdate,
-      async execute(client: Client, oldVoiceState:VoiceState, newVoiceState:VoiceState) {
-        const config = ConfigManager.getConfig<AutoVoiceConfig>(
-            "autoVoice",
-            oldVoiceState.guild.id
-        );
-        if (newVoiceState.channel) { // The member connected to a channel.
-          if (config.channelsIds.includes(newVoiceState.channel.id.toString())) {
-            let category: CategoryChannel = <CategoryChannel> client.channels.cache.get(config.tempCategory);
-            let member:GuildMember | null = newVoiceState.member;
-            if(category && member)
-            {
-              const tempVoice = await newVoiceState.guild.channels.create({
-                name: config.format.replace("%user%", member.displayName),
-                type: ChannelType.GuildVoice,
-                parent: category.id,
-                permissionOverwrites: [],
-              })
-              await newVoiceState.setChannel(tempVoice);
-              tempVoice.send({
-                embeds: [
-                  {
-                    title: "🧩 Salon vocal temporaire créé",
-                    fields: [
-                      { name: "Salon", value: `<#${tempVoice.id}>`, inline: true },
-                      { name: "Propriétaire", value: `<@${newVoiceState.member!.id}>`, inline: true },
-                      { name: "ID", value: `\`${tempVoice.id}\``, inline: false },
-                    ],
-                    timestamp: new Date().toISOString(),
-                    color: 0x00aaff,
-                  },
-                ],
-              });
-            }
-          }
-        }
-        if (oldVoiceState.channel) { // The member disconnected from a channel.
-          let category: CategoryChannel | null = oldVoiceState.channel.parent;
-          if(category)
-          {
-            if(category.id === config.tempCategory && oldVoiceState.channel.members.size === 0)
-            {
-              await oldVoiceState.channel.delete();
-            }
-            else if(category.id === config.tempCategory) {
-              const ownerIds: string = await fetchOwnerId(oldVoiceState.channel, client)
-              if(oldVoiceState.channel.members.filter((m) => {
-                m.id === ownerIds
-              }).size === 0) {
-                const first = oldVoiceState.channel.members.first();
-                if(first)
-                {
-                  const config = ConfigManager.getConfig<AutoVoiceConfig>(
-                      "autoVoice",
-                      oldVoiceState.guild.id
-                  );
-                  await oldVoiceState.channel.setName(config.format.replace("%user%", first.displayName))
-                  const messages = await oldVoiceState.channel.messages.fetch()
-                  let botMessage = messages.filter((message) => message.author.id === client.user?.id).first()
-                  if(botMessage)
-                  {
-                    let embed = botMessage.embeds[0];
-                    if(embed)
-                    {
-                      embed.fields.forEach((field) => {
-                        if(field.name === "Propriétaire")
-                          field.value = `<@${first.id}>`;
-                      })
-                      botMessage.embeds[0] = embed;
-                    }
-                    botMessage.edit({
-                      content: botMessage.content,
-                      embeds: botMessage.embeds,
-                      components: botMessage.components
-                    });
-                  }
+    name: MODULE_NAME,
+    commands: [],
+    event: [
+        {
+            eventType: Events.VoiceStateUpdate,
+            async execute(client: Client, oldState: VoiceState, newState: VoiceState) {
+                const config = await getValidatedConfig(oldState.guild.id);
 
+                if (newState.channel && isAutoVoiceChannel(newState.channel.id, config)) {
+                    await handleVoiceJoin(client, newState, config);
                 }
-              }
-            }
-          }
-        }
-      },
-      once: false,
-    },
-  ],
+
+                if (oldState.channel) {
+                    await handleVoiceLeave(client, oldState, config);
+                }
+            },
+            once: false,
+        },
+    ],
 };
 
-async function fetchOwnerId(channel: VoiceChannel | StageChannel, client: Client): Promise<string> {
-  const messages = await channel.messages.fetch()
-  let botMessage = messages.filter((message) => message.author.id === client.user?.id).first()
-  if(botMessage)
-  {
-    let embed = botMessage.embeds[0];
-    if(embed)
-    {
-      embed.fields.forEach((field) => {
-        if(field.name === "Propriétaire")
-        {
-          return field.value.replace("<@", "").replace(">", "")
-        }
-      })
+async function handleVoiceJoin(
+    client: Client,
+    state: VoiceState,
+    config: AutoVoiceConfig
+): Promise<void> {
+    const category = client.channels.cache.get(config.tempCategory) as CategoryChannel;
+    const member = state.member;
+
+    if (!category || !member) return;
+
+    const tempVoice = await createTempVoiceChannel(state, category, member, config);
+    await state.setChannel(tempVoice);
+    await sendTempChannelEmbed(tempVoice, member);
+}
+
+async function createTempVoiceChannel(
+    state: VoiceState,
+    category: CategoryChannel,
+    member: GuildMember,
+    config: AutoVoiceConfig
+) {
+    return state.guild.channels.create({
+        name: config.format.replace("%user%", member.displayName),
+        type: ChannelType.GuildVoice,
+        parent: category.id,
+        permissionOverwrites: [],
+    });
+}
+
+async function sendTempChannelEmbed(channel: VoiceChannel, owner: GuildMember) {
+    const embed = new EmbedBuilder()
+        .setTitle("🧩 Salon vocal temporaire créé")
+        .addFields([
+            {name: OWNER_FIELD_CHANNEL, value: `<#${channel.id}>`, inline: true},
+            {name: OWNER_FIELD_NAME, value: `<@${owner.id}>`, inline: true},
+            {name: "ID", value: `\`${channel.id}\``, inline: false},
+        ])
+        .setTimestamp()
+        .setColor(EMBED_COLOR);
+
+    await channel.send({embeds: [embed]});
+}
+
+async function handleVoiceLeave(
+    client: Client,
+    state: VoiceState,
+    config: AutoVoiceConfig
+): Promise<void> {
+    const category = state.channel!.parent;
+    if (!category || category.id !== config.tempCategory) return;
+
+    if (state.channel!.members.size === 0) {
+        await state.channel!.delete();
+        return;
     }
-  }
-  return "";
+
+    const ownerId = await fetchOwnerId(state.channel!, client);
+    const hasOwnerLeft = !state.channel!.members.some(m => m.id === ownerId);
+
+    if (hasOwnerLeft) {
+        await updateChannelOwnership(state.channel!, client);
+    }
+}
+
+async function fetchOwnerId(channel: VoiceChannel | StageChannel, client: Client): Promise<string> {
+    const messages = await channel.messages.fetch();
+    const botMessage = messages.find(msg => msg.author.id === client.user?.id);
+    if (!botMessage?.embeds[0]) return "";
+
+    const ownerField = botMessage.embeds[0].fields.find(f => f.name === OWNER_FIELD_NAME);
+    return ownerField?.value.replace(/[<@>]/g, "") || "";
+}
+
+async function updateChannelOwnership(channel: VoiceChannel | StageChannel, client: Client) {
+    const newOwner = channel.members.first();
+    if (!newOwner) return;
+
+    const config = await getValidatedConfig(newOwner.guild.id);
+    await channel.setName(config.format.replace("%user%", newOwner.displayName));
+
+    const messages = await channel.messages.fetch();
+    const botMessage = messages.find(msg => msg.author.id === client.user?.id);
+
+    if (botMessage?.embeds[0]) {
+        const updatedEmbed = EmbedBuilder.from(botMessage.embeds[0])
+            .setFields(
+                botMessage.embeds[0].fields.map(field =>
+                    field.name === OWNER_FIELD_NAME
+                        ? {...field, value: `<@${newOwner.id}>`}
+                        : field
+                )
+            );
+
+        await botMessage.edit({embeds: [updatedEmbed]});
+    }
+}
+
+function isAutoVoiceChannel(channelId: string, config: AutoVoiceConfig): boolean {
+    return config.channelsIds.includes(channelId);
+}
+
+async function getValidatedConfig(guildId: string): Promise<AutoVoiceConfig> {
+    const config = ConfigManager.getConfig<AutoVoiceConfig>(MODULE_NAME, guildId);
+    if (!config?.enabled) {
+        throw new Error("Configuration d'autoVoice invalide");
+    }
+    return config;
 }
 
 export default autoVoice;
