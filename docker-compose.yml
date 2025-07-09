@@ -4,11 +4,9 @@ services:
   koby:
     container_name: koby-bot
     build:
-      context: .            # <- Chemin du dépôt cloné par Portainer
+      context: .
       dockerfile: Dockerfile
-    restart: unless-stopped
+    restart: always
     working_dir: /app
-
-    # Volumes montés pour persistance des configs
     volumes:
       - ./config:/app/config
