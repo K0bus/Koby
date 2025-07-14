@@ -1,0 +1,20 @@
+FROM node:22-alpine
+
+# Dossier de travail
+WORKDIR /app
+
+# Copie des fichiers nécessaires à l'installation
+COPY package*.json ./
+
+# Installation des dépendances complètes (incl. devDependencies)
+RUN npm install
+
+# Copie uniquement ce qui est nécessaire au démarrage (hors src : monté en volume)
+COPY tsconfig.json ./
+COPY prisma ./prisma
+COPY config ./config
+
+RUN npm run prisma:generate
+
+# Commande par défaut : hot reload
+CMD ["npm", "run", "dev"]

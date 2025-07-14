@@ -1,33 +1,29 @@
 import fs from 'fs';
 import path from 'path';
 import { ModuleConfig } from '../types/ModuleConfig';
-
-const basePath = path.join(__dirname.replace('dist/', ''), '../../config');
+import { GuildSettingsService } from '../db';
+import { GuildSetting } from '@prisma/client';
 
 export class ConfigManager {
-  static getConfig<T extends ModuleConfig>(moduleName: string, guildId?: string): T {
-    const defaultPath = path.join(basePath, 'guilds_default', `${moduleName}.json`);
-    const guildPath = guildId ? path.join(basePath, 'guilds', guildId, `${moduleName}.json`) : null;
-
-    if (guildPath && fs.existsSync(guildPath)) {
-      const raw = fs.readFileSync(guildPath, 'utf-8');
-      return JSON.parse(raw) as T;
+  static async getConfig<T extends ModuleConfig>(moduleName: string, guildId?: string): Promise<T> {
+    console.log(`[${guildId}] Loading config for module ${moduleName}`);
+    const setting: GuildSetting | null = await GuildSettingsService.get(guildId ?? '', moduleName);
+    console.log(`[${guildId}] Config for module ${moduleName} loaded`);
+    if (setting) {
+      return setting.settingValue as T;
+    } else {
+      const basePath = path.join(
+        __dirname.replace('dist/', ''),
+        '../../config',
+        'guilds_default',
+        `${moduleName}.json`
+      );
+      if (fs.existsSync(basePath)) {
+        const jsonSetting: T = JSON.parse(fs.readFileSync(basePath, 'utf-8')) as T;
+        await GuildSettingsService.set(guildId ?? '', moduleName, jsonSetting);
+        return jsonSetting;
+      }
     }
-
-    if (fs.existsSync(defaultPath)) {
-      return JSON.parse(fs.readFileSync(defaultPath, 'utf-8')) as T;
-    }
-
     throw new Error(`Configuration introuvable pour le module "${moduleName}"`);
-  }
-
-  static saveConfig(moduleName: string, guildId: string | undefined, config: string): void {
-    if (guildId) {
-      const folder = path.join(basePath, guildId);
-      if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
-
-      const filePath = path.join(folder, `${moduleName}.json`);
-      fs.writeFileSync(filePath, JSON.stringify(config, null, 2));
-    }
   }
 }

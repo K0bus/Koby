@@ -4,44 +4,33 @@ import {
   Events,
   GuildMember,
   InteractionContextType,
-  MessageCreateOptions,
   MessageFlags,
   PermissionFlagsBits,
   SlashCommandBuilder,
 } from 'discord.js';
 
 import { BotModule } from '../types/BotTypes';
-import { ConfigManager } from '../utils/ConfigManager';
 import { parseMessage } from '../utils/Parser';
+import { WelcomeConfigManager } from '../config/managers/welcome-config';
 
-export type WelcomeConfig = {
-  enabled: boolean;
-  bot: boolean;
-  channelId: string;
-  message: MessageCreateOptions;
-};
-
-const MODULE_NAME = 'welcomeMessage';
-
+const MODULE_NAME: string = 'welcomeMessage';
 const welcomeMessage: BotModule = {
   name: MODULE_NAME,
   commands: [
     {
       slashCommand: new SlashCommandBuilder()
-        .setName(MODULE_NAME)
+        .setName('welcometest')
         .setDescription('Test your Welcome message')
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .setContexts(InteractionContextType.Guild),
       async execute(client: Client, interaction: ChatInputCommandInteraction) {
         const member = <GuildMember>interaction.member!;
-        if (!hasPermissionsAdmin(member))
-          return await sendError(
-            interaction,
-            "You don't have the permission to use this command !"
-          );
-        await sendWelcome(<GuildMember>interaction.member);
+        if (!member.permissions.has(PermissionFlagsBits.Administrator)) {
+          await interaction.reply("You don't have the permission to use this command !");
+          return;
+        }
         await interaction.reply({
-          content: 'Welcome message sent !',
+          content: await sendWelcome(member),
           flags: MessageFlags.Ephemeral,
         });
       },
@@ -58,31 +47,38 @@ const welcomeMessage: BotModule = {
   ],
 };
 
-function hasPermissionsAdmin(member: GuildMember) {
-  return member.permissions.has(PermissionFlagsBits.Administrator);
-}
-
-async function sendError(interaction: ChatInputCommandInteraction, error: string) {
-  await interaction.reply(error);
-}
-
-async function sendWelcome(member: GuildMember) {
-  const config = ConfigManager.getConfig<WelcomeConfig>(MODULE_NAME, member.guild.id);
+async function sendWelcome(member: GuildMember): Promise<string> {
+  const config = await new WelcomeConfigManager(member.guild.id).get();
 
   const channels = await member.guild.channels.fetch();
   const welcomeChannel = channels.get(config.channelId);
-
-  if (!config.enabled) return;
+  if (!config.enabled) return '❌ Welcome message disabled in config';
   if (welcomeChannel) {
-    const config = ConfigManager.getConfig<WelcomeConfig>(MODULE_NAME, member.guild.id);
     const channel = member.guild.channels.cache.get(config.channelId);
     if (channel?.isTextBased()) {
+      const message = parseMessage(config.message, member, parseString);
+      const messages = await channel.messages.fetch({ limit: 10 });
+      for (const lastMessage of messages.values()) {
+        if (lastMessage) {
+          if (
+            JSON.stringify(message.embeds) === JSON.stringify(lastMessage.embeds) &&
+            message.content === lastMessage.content
+          ) {
+            console.log('Duplicate welcome message');
+            return '❌ Duplicate welcome message';
+          }
+        }
+      }
       await channel.send(parseMessage(config.message, member, parseString));
+    } else {
+      return '❌ Welcome channel not found';
     }
   } else {
-    console.log("Can't find channel " + config.channelId);
+    return '❌ Welcome channel not found';
   }
+  return '✅ Welcome message sent';
 }
+
 function parseString(text: string | undefined, member: GuildMember): string | undefined {
   if (text) {
     text = text.replace('%userid%', member.user.id);

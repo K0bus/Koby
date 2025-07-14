@@ -12,14 +12,7 @@ import {
 } from 'discord.js';
 
 import { BotModule } from '../types/BotTypes';
-import { ConfigManager } from '../utils/ConfigManager';
-
-interface CounterConfig {
-  enabled: boolean;
-  bot: boolean;
-  channelId: string;
-  format: string;
-}
+import { CounterConfigManager } from '../config/managers/counter-config';
 
 const MODULE_NAME = 'memberCounter';
 
@@ -63,7 +56,7 @@ const memberCounter: BotModule = {
 };
 
 async function refreshCounter(guild: Guild, client: Client): Promise<boolean | string> {
-  const config = ConfigManager.getConfig<CounterConfig>(MODULE_NAME, guild.id);
+  const config = await new CounterConfigManager(guild.id).get();
   if (config.enabled) {
     const members = await guild.members.fetch();
     const humanCount = members.filter((m) => !m.user.bot).size;
@@ -81,8 +74,9 @@ async function refreshCounter(guild: Guild, client: Client): Promise<boolean | s
     } else {
       return "Can't find channel " + config.channelId;
     }
+  } else {
+    return 'Counter is disabled !';
   }
-  return 'Unknown error';
 }
 
 export default memberCounter;

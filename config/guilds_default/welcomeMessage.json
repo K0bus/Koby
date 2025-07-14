@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "bot": false,
-  "channelId": "1384641929337114686",
+  "channelId": "1244258979547185174",
   "message": {
     "content": "Bienvenue <@%userid%>!",
     "tts": false,

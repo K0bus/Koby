@@ -10,14 +10,7 @@ import {
   EmbedBuilder,
 } from 'discord.js';
 import { BotModule } from '../types/BotTypes';
-import { ConfigManager } from '../utils/ConfigManager';
-
-interface AutoVoiceConfig {
-  enabled: boolean;
-  channelsIds: string[];
-  tempCategory: string;
-  format: string;
-}
+import { AutoVoiceConfig, AutoVoiceConfigManager } from '../config/managers/autovoice-config';
 
 const MODULE_NAME = 'autoVoice';
 const EMBED_COLOR = 0x00aaff;
@@ -31,7 +24,7 @@ const autoVoice: BotModule = {
     {
       eventType: Events.VoiceStateUpdate,
       async execute(client: Client, oldState: VoiceState, newState: VoiceState) {
-        const config = getValidatedConfig(oldState.guild.id);
+        const config: AutoVoiceConfig = await new AutoVoiceConfigManager(oldState.guild.id).get();
 
         if (newState.channel && isAutoVoiceChannel(newState.channel.id, config)) {
           await handleVoiceJoin(client, newState, config);
@@ -123,7 +116,7 @@ async function updateChannelOwnership(channel: VoiceChannel | StageChannel, clie
   const newOwner = channel.members.first();
   if (!newOwner) return;
 
-  const config = getValidatedConfig(newOwner.guild.id);
+  const config: AutoVoiceConfig = await new AutoVoiceConfigManager(newOwner.guild.id).get();
   await channel.setName(config.format.replace('%user%', newOwner.displayName));
 
   const messages = await channel.messages.fetch();
@@ -142,14 +135,6 @@ async function updateChannelOwnership(channel: VoiceChannel | StageChannel, clie
 
 function isAutoVoiceChannel(channelId: string, config: AutoVoiceConfig): boolean {
   return config.channelsIds.includes(channelId);
-}
-
-function getValidatedConfig(guildId: string): AutoVoiceConfig {
-  const config = ConfigManager.getConfig<AutoVoiceConfig>(MODULE_NAME, guildId);
-  if (!config?.enabled) {
-    throw new Error("Configuration d'autoVoice invalide");
-  }
-  return config;
 }
 
 export default autoVoice;

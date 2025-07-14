@@ -1,18 +1,12 @@
 import { Client, Events, MessageFlags } from 'discord.js';
-import { readdirSync } from 'fs';
-import path from 'path';
-import { BotCommand, BotEvent, BotModule } from '../types/BotTypes';
+import { BotCommand, BotEvent } from '../types/BotTypes';
+import ModuleManager from '../modules';
 
-export async function loadModules(client: Client) {
-  const foldersPath = path.join(__dirname, '../modules');
-  const moduleFile = readdirSync(foldersPath).filter(
-    (file) => file.endsWith('.ts') || file.endsWith('.js')
-  );
+const moduleManager = new ModuleManager();
 
-  for (const file of moduleFile) {
-    const eventPath = path.join(foldersPath, file);
-    const imported = (await import(eventPath)) as { default?: BotModule };
-    const module: BotModule = (imported as { default: BotModule }).default;
+export function loadModules(client: Client) {
+  for (const module of moduleManager.list()) {
+    console.log(`[Global] Loading module ${module.name}`);
 
     module.event.forEach((event: BotEvent) => {
       if (event.once) {

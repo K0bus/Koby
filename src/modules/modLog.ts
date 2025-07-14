@@ -12,7 +12,7 @@ import {
 } from 'discord.js';
 
 import { BotModule } from '../types/BotTypes';
-import { ConfigManager } from '../utils/ConfigManager';
+import { ModLogConfigManager } from '../config/managers/modlog-config';
 
 interface ModLogConfig {
   enabled: boolean;
@@ -28,7 +28,7 @@ const modLog: BotModule = {
     {
       eventType: Events.GuildBanAdd,
       async execute(client, ban: GuildBan) {
-        const config = getValidatedConfig(ban.guild.id);
+        const config = await new ModLogConfigManager(ban.guild.id).get();
         const channel = ban.guild.channels.cache.get(config.channelId);
         if (channel?.isTextBased()) await sendBanEmbed(channel, ban);
       },
@@ -37,7 +37,7 @@ const modLog: BotModule = {
     {
       eventType: Events.GuildBanRemove,
       async execute(client, ban: GuildBan) {
-        const config = getValidatedConfig(ban.guild.id);
+        const config = await new ModLogConfigManager(ban.guild.id).get();
         const channel = ban.guild.channels.cache.get(config.channelId);
         if (channel?.isTextBased()) await sendUnbanEmbed(channel, ban);
       },
@@ -46,7 +46,7 @@ const modLog: BotModule = {
     {
       eventType: Events.GuildMemberAdd,
       async execute(client, member: GuildMember) {
-        const config = getValidatedConfig(member.guild.id);
+        const config = await new ModLogConfigManager(member.guild.id).get();
         const channel = member.guild.channels.cache.get(config.channelId);
         if (channel?.isTextBased()) {
           await sendEmbed(channel, '➕ Nouveau membre', `<@${member.id}> a rejoint.`, [], 0x57f287);
@@ -57,7 +57,7 @@ const modLog: BotModule = {
     {
       eventType: Events.GuildMemberRemove,
       async execute(client, member: GuildMember) {
-        const config = getValidatedConfig(member.guild.id);
+        const config: ModLogConfig = await new ModLogConfigManager(member.guild.id).get();
         const channel = member.guild.channels.cache.get(config.channelId);
         if (channel?.isTextBased()) {
           await sendEmbed(
@@ -76,7 +76,7 @@ const modLog: BotModule = {
       async execute(client, message: Message | PartialMessage) {
         if (client.user && message.author?.id === client.user.id) return;
         if (!message.guild) return;
-        const config = getValidatedConfig(message.guild.id);
+        const config = await new ModLogConfigManager(message.guild.id).get();
         const channel = message.guild.channels.cache.get(config.channelId);
         if (channel?.isTextBased()) {
           const content = message.content || '*Contenu inconnu*';
@@ -96,7 +96,7 @@ const modLog: BotModule = {
       async execute(client, oldMsg: Message | PartialMessage, newMsg: Message | PartialMessage) {
         if (client.user && oldMsg.author?.id === client.user.id) return;
         if (!oldMsg.guild || oldMsg.content === newMsg.content) return;
-        const config = getValidatedConfig(oldMsg.guild.id);
+        const config = await new ModLogConfigManager(oldMsg.guild.id).get();
         const channel = oldMsg.guild.channels.cache.get(config.channelId);
         if (channel?.isTextBased()) {
           await sendEmbed(
@@ -117,7 +117,7 @@ const modLog: BotModule = {
       eventType: Events.ChannelCreate,
       async execute(client, channel: GuildChannel) {
         if (!channel.guild) return;
-        const config = getValidatedConfig(channel.guild.id);
+        const config = await new ModLogConfigManager(channel.guild.id).get();
         const logChannel = channel.guild.channels.cache.get(config.channelId);
         if (logChannel?.isTextBased()) {
           await sendEmbed(
@@ -135,7 +135,7 @@ const modLog: BotModule = {
       eventType: Events.ChannelDelete,
       async execute(client, channel: GuildChannel) {
         if (!channel.guild) return;
-        const config = getValidatedConfig(channel.guild.id);
+        const config = await new ModLogConfigManager(channel.guild.id).get();
         const logChannel = channel.guild.channels.cache.get(config.channelId);
         if (logChannel?.isTextBased()) {
           await sendEmbed(
@@ -152,7 +152,7 @@ const modLog: BotModule = {
     {
       eventType: Events.GuildRoleCreate,
       async execute(client, role: Role) {
-        const config = getValidatedConfig(role.guild.id);
+        const config = await new ModLogConfigManager(role.guild.id).get();
         const channel = role.guild.channels.cache.get(config.channelId);
         if (channel?.isTextBased()) {
           await sendEmbed(channel, '🎭 Rôle créé', `Rôle: <@&${role.id}>`, [], 0x9b59b6);
@@ -163,7 +163,7 @@ const modLog: BotModule = {
     {
       eventType: Events.GuildRoleDelete,
       async execute(client, role: Role) {
-        const config = getValidatedConfig(role.guild.id);
+        const config = await new ModLogConfigManager(role.guild.id).get();
         const channel = role.guild.channels.cache.get(config.channelId);
         if (channel?.isTextBased()) {
           await sendEmbed(channel, '🧹 Rôle supprimé', `Nom du rôle: ${role.name}`, [], 0x95a5a6);
@@ -173,14 +173,6 @@ const modLog: BotModule = {
     },
   ],
 };
-
-function getValidatedConfig(guildId: string): ModLogConfig {
-  const config = ConfigManager.getConfig<ModLogConfig>(MODULE_NAME, guildId);
-  if (!config?.enabled || config.channelId) {
-    throw new Error('Configuration de modLog invalide');
-  }
-  return config;
-}
 
 function genField(name: string, value: string): EmbedField {
   return {
