@@ -1,45 +1,20 @@
 import {
-  Events,
-  GuildMember,
-  Client,
-  VoiceState,
   CategoryChannel,
   ChannelType,
-  VoiceChannel,
-  StageChannel,
+  Client,
   EmbedBuilder,
+  GuildMember,
+  StageChannel,
+  VoiceChannel,
+  VoiceState,
 } from 'discord.js';
-import { BotModule } from '../types/BotTypes';
-import { AutoVoiceConfig, AutoVoiceConfigManager } from '../config/managers/autovoice-config';
+import { AutoVoiceConfig, AutoVoiceConfigManager } from '../../config/managers/autovoice-config';
 
-const MODULE_NAME = 'autoVoice';
 const EMBED_COLOR = 0x00aaff;
 const OWNER_FIELD_CHANNEL = 'Salon';
 const OWNER_FIELD_NAME = 'Propriétaire';
 
-const autoVoice: BotModule = {
-  name: MODULE_NAME,
-  commands: [],
-  event: [
-    {
-      eventType: Events.VoiceStateUpdate,
-      async execute(client: Client, oldState: VoiceState, newState: VoiceState) {
-        const config: AutoVoiceConfig = await new AutoVoiceConfigManager(oldState.guild.id).get();
-
-        if (newState.channel && isAutoVoiceChannel(newState.channel.id, config)) {
-          await handleVoiceJoin(client, newState, config);
-        }
-
-        if (oldState.channel) {
-          await handleVoiceLeave(client, oldState, config);
-        }
-      },
-      once: false,
-    },
-  ],
-};
-
-async function handleVoiceJoin(
+export async function handleVoiceJoin(
   client: Client,
   state: VoiceState,
   config: AutoVoiceConfig
@@ -82,7 +57,7 @@ async function sendTempChannelEmbed(channel: VoiceChannel, owner: GuildMember) {
   await channel.send({ embeds: [embed] });
 }
 
-async function handleVoiceLeave(
+export async function handleVoiceLeave(
   client: Client,
   state: VoiceState,
   config: AutoVoiceConfig
@@ -133,8 +108,6 @@ async function updateChannelOwnership(channel: VoiceChannel | StageChannel, clie
   }
 }
 
-function isAutoVoiceChannel(channelId: string, config: AutoVoiceConfig): boolean {
+export function isAutoVoiceChannel(channelId: string, config: AutoVoiceConfig): boolean {
   return config.channelsIds.includes(channelId);
 }
-
-export default autoVoice;

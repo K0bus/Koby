@@ -1,6 +1,6 @@
 import { Client, GatewayIntentBits, Events, Partials, ActivityType } from 'discord.js';
-import { loadModules } from '../utils/loadModules';
 import { Bot } from '../types/BotTypes';
+import { loadModules } from '../modules';
 
 export function createClient(bot: Bot) {
   const client = new Client({
