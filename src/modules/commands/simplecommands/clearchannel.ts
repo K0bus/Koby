@@ -28,9 +28,12 @@ export const clearchannel: BotCommand = {
       if (channel?.isTextBased()) {
         await channel.messages.fetch();
         (<TextChannel>channel)
-          .bulkDelete(n)
-          .then(async () => {
-            await Messager.sendSuccessMessage(interaction, 'Channel nettoyé !');
+          .bulkDelete(n, true)
+          .then(async (messages) => {
+            await Messager.sendSuccessMessage(
+              interaction,
+              `Channel nettoyé avec ${messages.size} supprimé !`
+            );
           })
           .catch(async (reason: DiscordAPIError) => {
             await Messager.sendAPIError(interaction, reason);

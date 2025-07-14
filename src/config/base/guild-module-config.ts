@@ -13,7 +13,6 @@ export abstract class GuildModuleConfig<T> extends BaseConfig<T> {
   abstract fallback: T;
 
   async get(): Promise<T> {
-    console.log(`[${this.guildId}] Loading config for module ${this.settingName}`);
     const setting = await GuildSettingsService.get(this.guildId, this.settingName);
     if (setting && this.validate(setting.settingValue)) {
       return setting.settingValue;
