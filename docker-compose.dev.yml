@@ -15,7 +15,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   koby-dev:
-    container_name: koby-app
+    container_name: koby-bot
     build:
       context: .
       dockerfile: DockerfileDev
@@ -23,6 +23,8 @@ services:
       - ./src:/app/src
       - ./config:/app/config
       - ./prisma:/app/prisma
+    ports:
+      - "5000:5000"
     env_file:
       - .env
     depends_on:

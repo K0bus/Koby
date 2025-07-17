@@ -1,7 +1,14 @@
-import { createClient } from './bot/client';
-import { Bot } from './types/BotTypes';
-import botConfig from '../config/bots.json';
+import { botManager } from './bot/BotManager';
+import { createExpressApp } from './api';
 
-botConfig.forEach((data: Bot) => {
-  createClient(data);
-});
+function init() {
+  botManager.init();
+
+  const app = createExpressApp();
+
+  app.listen(5000, () => {
+    console.log('✅ Express server is running on port 5000');
+  });
+}
+
+void init();

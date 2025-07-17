@@ -7,6 +7,7 @@ import { ModlogModule } from './managers/modlog-module';
 import { SimplecommandsModule } from './managers/simplecommands-module';
 import { WelcomemessageModule } from './managers/welcomemessage-module';
 import { Client, Events, MessageFlags } from 'discord.js';
+import { SetupModule } from './managers/setup-module';
 
 export class ModuleManager {
   modules: BaseModule[] = [];
@@ -17,6 +18,7 @@ export class ModuleManager {
     this.modules.push(new ModlogModule());
     this.modules.push(new SimplecommandsModule());
     this.modules.push(new WelcomemessageModule());
+    this.modules.push(new SetupModule());
   }
   list(): BotModule[] {
     return this.modules;

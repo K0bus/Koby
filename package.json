@@ -5,8 +5,10 @@
   "main": "dist/src/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts --include src/*.ts --poll",
+    "dev:api": "tsx watch src/api/index.ts --include src/api/*.ts --poll",
     "build": "tsc",
     "start": "node .",
+    "start:api": "node ./src/dist/api/main.js",
     "start_migrate": "npm run prisma:deploy && npm run start",
     "commands:register": "tsx src/bot/register-commands.ts",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -22,13 +24,19 @@
   "type": "commonjs",
   "dependencies": {
     "@prisma/client": "^6.11.1",
+    "cors": "^2.8.5",
     "discord.js": "^14.20.0",
     "dotenv": "^16.5.0",
-    "moviedb-promise": "^4.0.7"
+    "express": "^5.1.0",
+    "moviedb-promise": "^4.0.7",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.31.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
     "@types/node": "^24.0.3",
     "eslint": "^9.31.0",
     "eslint-config-prettier": "^10.1.5",
@@ -37,6 +45,7 @@
     "prettier": "^3.6.2",
     "prisma": "^6.11.1",
     "ts-jest": "^29.4.0",
+    "tsconfig-paths": "^4.2.0",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.36.0"
