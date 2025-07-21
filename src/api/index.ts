@@ -64,6 +64,23 @@ export function createExpressApp() {
     });
   });
 
+  app.put('/api/settings/:guildId/:settingName', async (req, res) => {
+    const { guildId, settingName } = req.params;
+    if (req.body === undefined) return res.status(400).json({ error: 'Body is undefined' });
+    const config = await GuildSettingsService.get(guildId, settingName);
+    if (!config) {
+      return res.status(404).json({ error: 'Setting not found' });
+    }
+    const currentValue: JSON = req.body as JSON;
+
+    await GuildSettingsService.set(guildId, settingName, currentValue);
+
+    return res.json({
+      status: 'updated',
+      fullConfig: currentValue,
+    });
+  });
+
   app.get('/api/guilds/:id', (req, res) => {
     const guildId = req.params.id;
     const client = botManager.getClientByGuild(guildId);
