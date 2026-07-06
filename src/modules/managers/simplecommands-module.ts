@@ -3,6 +3,7 @@ import { film } from '../commands/simplecommands/film';
 import { info } from '../commands/simplecommands/info';
 import { ping } from '../commands/simplecommands/ping';
 import { clearchannel } from '../commands/simplecommands/clearchannel';
+import { clearmessage } from '../commands/simplecommands/clearmessage';
 
 export class SimplecommandsModule extends BaseModule {
   constructor() {
@@ -11,5 +12,6 @@ export class SimplecommandsModule extends BaseModule {
     this.registerCommand(info);
     this.registerCommand(ping);
     this.registerCommand(clearchannel);
+    this.registerCommand(clearmessage);
   }
 }
