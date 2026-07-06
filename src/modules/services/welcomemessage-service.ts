@@ -36,9 +36,22 @@ export async function sendWelcome(member: GuildMember): Promise<string> {
 
 function parseString(text: string | undefined, member: GuildMember): string | undefined {
   if (text) {
-    text = text.replace('%userid%', member.user.id);
-    text = text.replace('%username%', member.user.displayName);
-    text = text.replace('%user_avatar%', member.user.displayAvatarURL());
+    const replacements: Record<string, string> = {
+      '%userid%': member.user.id,
+      '{userid}': member.user.id,
+      '%username%': member.user.displayName,
+      '{username}': member.user.displayName,
+      '%user_avatar%': member.user.displayAvatarURL(),
+      '{user_avatar}': member.user.displayAvatarURL(),
+      '%guild_name%': member.guild.name,
+      '{guild_name}': member.guild.name,
+      '%member_count%': member.guild.memberCount.toString(),
+      '{member_count}': member.guild.memberCount.toString(),
+    };
+
+    for (const [placeholder, value] of Object.entries(replacements)) {
+      text = text.split(placeholder).join(value);
+    }
   }
   return text;
 }

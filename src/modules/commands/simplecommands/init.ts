@@ -1,5 +1,5 @@
 import { BotCommand } from '../../../types/BotTypes';
-import { ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
 import { Messager } from '../../../utils/Messager';
 import { initializeGuildConfig } from '../../../utils/config-init';
 
@@ -11,7 +11,10 @@ export const init: BotCommand = {
   async execute(client, interaction: ChatInputCommandInteraction) {
     const guildId = interaction.guildId;
     if (!guildId) {
-      await Messager.sendErrorMessage(interaction, 'Cette commande doit être exécutée dans un serveur.');
+      await Messager.sendErrorMessage(
+        interaction,
+        'Cette commande doit être exécutée dans un serveur.'
+      );
       return;
     }
 
@@ -19,10 +22,16 @@ export const init: BotCommand = {
 
     try {
       await initializeGuildConfig(guildId);
-      await Messager.sendSuccessMessage(interaction, 'Les configurations par défaut ont été initialisées avec succès !');
+      await Messager.sendSuccessMessage(
+        interaction,
+        'Les configurations par défaut ont été initialisées avec succès !'
+      );
     } catch (error) {
       console.error(`[InitCommand] Error initializing config for guild ${guildId}:`, error);
-      await Messager.sendErrorMessage(interaction, "Une erreur est survenue lors de l'initialisation des configurations.");
+      await Messager.sendErrorMessage(
+        interaction,
+        "Une erreur est survenue lors de l'initialisation des configurations."
+      );
     }
   },
 };

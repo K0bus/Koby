@@ -13,10 +13,8 @@ import {
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
-  ComponentType,
   ChannelType,
   EmbedBuilder,
-  InteractionCollector,
 } from 'discord.js';
 import { WelcomeConfigManager } from '../../../config/managers/welcome-config';
 import { AutoVoiceConfigManager } from '../../../config/managers/autovoice-config';
@@ -133,18 +131,30 @@ export const setup: BotCommand = {
         );
 
         const buttonRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-          new ButtonBuilder().setCustomId('setup_close').setLabel('Fermer').setStyle(ButtonStyle.Danger)
+          new ButtonBuilder()
+            .setCustomId('setup_close')
+            .setLabel('Fermer')
+            .setStyle(ButtonStyle.Danger)
         );
 
         components.push(selectMenuRow, buttonRow);
       } else if (currentView === 'welcome') {
+        let messageDisplay = '';
+        if (welcomeConf.message.embeds && welcomeConf.message.embeds.length > 0) {
+          messageDisplay = `\`\`\`json\n${JSON.stringify(welcomeConf.message, null, 2)}\n\`\`\``;
+        } else if (welcomeConf.message.content) {
+          messageDisplay = `\`\`\`${welcomeConf.message.content}\`\`\``;
+        } else {
+          messageDisplay = '*Par défaut*';
+        }
+
         const embed = new EmbedBuilder()
           .setTitle('✉️ Configuration - Message de Bienvenue')
           .setDescription(
             `Configurez le message de bienvenue envoyé aux nouveaux membres.\n\n` +
               `**Statut**: ${welcomeConf.enabled ? '✅ Activé' : '❌ Désactivé'}\n` +
               `**Salon**: ${welcomeConf.channelId ? `<#${welcomeConf.channelId}>` : '*Non défini*'}\n` +
-              `**Message**: ${welcomeConf.message.content ? `\`\`\`${welcomeConf.message.content}\`\`\`` : '*Par défaut*'}`
+              `**Message**: ${messageDisplay}`
           )
           .setColor(0xe74c3c);
 
@@ -166,7 +176,10 @@ export const setup: BotCommand = {
             .setCustomId('welcome_edit_msg')
             .setLabel('Modifier le Message')
             .setStyle(ButtonStyle.Primary),
-          new ButtonBuilder().setCustomId('setup_back').setLabel('Retour').setStyle(ButtonStyle.Secondary)
+          new ButtonBuilder()
+            .setCustomId('setup_back')
+            .setLabel('Retour')
+            .setStyle(ButtonStyle.Secondary)
         );
 
         components.push(channelSelectRow, buttonRow);
@@ -209,7 +222,10 @@ export const setup: BotCommand = {
             .setCustomId('autovoice_edit_format')
             .setLabel('Modifier le Format')
             .setStyle(ButtonStyle.Primary),
-          new ButtonBuilder().setCustomId('setup_back').setLabel('Retour').setStyle(ButtonStyle.Secondary)
+          new ButtonBuilder()
+            .setCustomId('setup_back')
+            .setLabel('Retour')
+            .setStyle(ButtonStyle.Secondary)
         );
 
         components.push(channelsSelectRow, categorySelectRow, buttonRow);
@@ -243,7 +259,10 @@ export const setup: BotCommand = {
             .setCustomId('autorole_toggle_bot')
             .setLabel(autoroleConf.bot ? 'Cible : Humains' : 'Cible : Bots')
             .setStyle(ButtonStyle.Primary),
-          new ButtonBuilder().setCustomId('setup_back').setLabel('Retour').setStyle(ButtonStyle.Secondary)
+          new ButtonBuilder()
+            .setCustomId('setup_back')
+            .setLabel('Retour')
+            .setStyle(ButtonStyle.Secondary)
         );
 
         components.push(roleSelectRow, buttonRow);
@@ -276,7 +295,10 @@ export const setup: BotCommand = {
             .setCustomId('counter_edit_format')
             .setLabel('Modifier le Format')
             .setStyle(ButtonStyle.Primary),
-          new ButtonBuilder().setCustomId('setup_back').setLabel('Retour').setStyle(ButtonStyle.Secondary)
+          new ButtonBuilder()
+            .setCustomId('setup_back')
+            .setLabel('Retour')
+            .setStyle(ButtonStyle.Secondary)
         );
 
         components.push(channelSelectRow, buttonRow);
@@ -314,7 +336,10 @@ export const setup: BotCommand = {
             .setCustomId('automod_edit_threshold')
             .setLabel('Modifier le Seuil')
             .setStyle(ButtonStyle.Primary),
-          new ButtonBuilder().setCustomId('setup_back').setLabel('Retour').setStyle(ButtonStyle.Secondary)
+          new ButtonBuilder()
+            .setCustomId('setup_back')
+            .setLabel('Retour')
+            .setStyle(ButtonStyle.Secondary)
         );
 
         components.push(channelSelectRow, buttonRow);
@@ -342,7 +367,10 @@ export const setup: BotCommand = {
             .setCustomId('modlog_toggle')
             .setLabel(modlogConf.enabled ? 'Désactiver' : 'Activer')
             .setStyle(modlogConf.enabled ? ButtonStyle.Danger : ButtonStyle.Success),
-          new ButtonBuilder().setCustomId('setup_back').setLabel('Retour').setStyle(ButtonStyle.Secondary)
+          new ButtonBuilder()
+            .setCustomId('setup_back')
+            .setLabel('Retour')
+            .setStyle(ButtonStyle.Secondary)
         );
 
         components.push(channelSelectRow, buttonRow);
@@ -366,314 +394,400 @@ export const setup: BotCommand = {
       time: 600000, // 10 minutes
     });
 
-    collector.on('collect', async (componentInteraction) => {
-      const customId = componentInteraction.customId;
+    collector.on('collect', (componentInteraction) => {
+      void (async () => {
+        const customId = componentInteraction.customId;
 
-      // Handle general navigation/control
-      if (customId === 'setup_close') {
-        collector.stop('user_closed');
-        return;
-      }
+        // Handle general navigation/control
+        if (customId === 'setup_close') {
+          collector.stop('user_closed');
+          return;
+        }
 
-      if (customId === 'setup_back') {
-        currentView = 'main';
-        const render = await renderView();
-        await componentInteraction.update({
-          embeds: render.embeds,
-          components: render.components,
-        });
-        return;
-      }
-
-      if (customId === 'setup_select_module') {
-        if (componentInteraction.isStringSelectMenu()) {
-          currentView = componentInteraction.values[0] as ViewState;
+        if (customId === 'setup_back') {
+          currentView = 'main';
           const render = await renderView();
           await componentInteraction.update({
             embeds: render.embeds,
             components: render.components,
           });
+          return;
         }
-        return;
-      }
 
-      // Handle Module-Specific Actions
-      const welcomeMgr = new WelcomeConfigManager(guildId);
-      const autovoiceMgr = new AutoVoiceConfigManager(guildId);
-      const autoroleMgr = new AutoRoleConfigManager(guildId);
-      const counterMgr = new CounterConfigManager(guildId);
-      const automodMgr = new AutomodConfigManager(guildId);
-      const modlogMgr = new ModLogConfigManager(guildId);
-
-      // --- WELCOME MESSAGE ---
-      if (currentView === 'welcome') {
-        const conf = await welcomeMgr.get();
-        if (customId === 'welcome_toggle') {
-          conf.enabled = !conf.enabled;
-          await welcomeMgr.save(conf);
-        } else if (customId === 'welcome_channel_select' && componentInteraction.isChannelSelectMenu()) {
-          conf.channelId = componentInteraction.values[0];
-          await welcomeMgr.save(conf);
-        } else if (customId === 'welcome_edit_msg') {
-          // Open Modal for welcome message content
-          const modal = new ModalBuilder()
-            .setCustomId('welcome_modal')
-            .setTitle('Message de Bienvenue');
-
-          const messageInput = new TextInputBuilder()
-            .setCustomId('welcome_text_input')
-            .setLabel('Message de bienvenue (texte)')
-            .setStyle(TextInputStyle.Paragraph)
-            .setValue(conf.message.content || '')
-            .setRequired(true)
-            .setPlaceholder('Ex: Bienvenue %username% sur notre serveur !');
-
-          const row = new ActionRowBuilder<TextInputBuilder>().addComponents(messageInput);
-          modal.addComponents(row);
-
-          await componentInteraction.showModal(modal);
-
-          try {
-            const submission = await componentInteraction.awaitModalSubmit({
-              filter: (i) => i.customId === 'welcome_modal' && i.user.id === interaction.user.id,
-              time: 60000,
+        if (customId === 'setup_select_module') {
+          if (componentInteraction.isStringSelectMenu()) {
+            currentView = componentInteraction.values[0] as ViewState;
+            const render = await renderView();
+            await componentInteraction.update({
+              embeds: render.embeds,
+              components: render.components,
             });
+          }
+          return;
+        }
 
-            const text = submission.fields.getTextInputValue('welcome_text_input');
-            conf.message.content = text;
+        // Handle Module-Specific Actions
+        const welcomeMgr = new WelcomeConfigManager(guildId);
+        const autovoiceMgr = new AutoVoiceConfigManager(guildId);
+        const autoroleMgr = new AutoRoleConfigManager(guildId);
+        const counterMgr = new CounterConfigManager(guildId);
+        const automodMgr = new AutomodConfigManager(guildId);
+        const modlogMgr = new ModLogConfigManager(guildId);
+
+        // --- WELCOME MESSAGE ---
+        if (currentView === 'welcome') {
+          const conf = await welcomeMgr.get();
+          if (customId === 'welcome_toggle') {
+            conf.enabled = !conf.enabled;
             await welcomeMgr.save(conf);
+          } else if (
+            customId === 'welcome_channel_select' &&
+            componentInteraction.isChannelSelectMenu()
+          ) {
+            conf.channelId = componentInteraction.values[0];
+            await welcomeMgr.save(conf);
+          } else if (customId === 'welcome_edit_msg') {
+            // Open Modal for welcome message content
+            const modal = new ModalBuilder()
+              .setCustomId('welcome_modal')
+              .setTitle('Message de Bienvenue');
 
-            await submission.deferUpdate();
-            const render = await renderView();
-            await interaction.editReply({
-              embeds: render.embeds,
-              components: render.components,
-            });
-          } catch (err) {
-            console.error('Modal welcome timeout or error:', err);
-          }
-          return;
-        }
-      }
-
-      // --- AUTO-VOICE ---
-      if (currentView === 'autovoice') {
-        const conf = await autovoiceMgr.get();
-        if (customId === 'autovoice_toggle') {
-          conf.enabled = !conf.enabled;
-          await autovoiceMgr.save(conf);
-        } else if (customId === 'autovoice_channels_select' && componentInteraction.isChannelSelectMenu()) {
-          conf.channelsIds = componentInteraction.values;
-          await autovoiceMgr.save(conf);
-        } else if (customId === 'autovoice_category_select' && componentInteraction.isChannelSelectMenu()) {
-          conf.tempCategory = componentInteraction.values[0];
-          await autovoiceMgr.save(conf);
-        } else if (customId === 'autovoice_edit_format') {
-          const modal = new ModalBuilder()
-            .setCustomId('autovoice_modal')
-            .setTitle("Format du salon Auto-Voice");
-
-          const formatInput = new TextInputBuilder()
-            .setCustomId('autovoice_format_input')
-            .setLabel('Format du nom du salon')
-            .setStyle(TextInputStyle.Short)
-            .setValue(conf.format)
-            .setRequired(true)
-            .setPlaceholder("Ex: Salon de %user%");
-
-          const row = new ActionRowBuilder<TextInputBuilder>().addComponents(formatInput);
-          modal.addComponents(row);
-
-          await componentInteraction.showModal(modal);
-
-          try {
-            const submission = await componentInteraction.awaitModalSubmit({
-              filter: (i) => i.customId === 'autovoice_modal' && i.user.id === interaction.user.id,
-              time: 60000,
-            });
-
-            conf.format = submission.fields.getTextInputValue('autovoice_format_input');
-            await autovoiceMgr.save(conf);
-
-            await submission.deferUpdate();
-            const render = await renderView();
-            await interaction.editReply({
-              embeds: render.embeds,
-              components: render.components,
-            });
-          } catch (err) {
-            console.error('Modal autovoice timeout or error:', err);
-          }
-          return;
-        }
-      }
-
-      // --- AUTO-ROLE ---
-      if (currentView === 'autorole') {
-        const conf = await autoroleMgr.get();
-        if (customId === 'autorole_toggle') {
-          conf.enabled = !conf.enabled;
-          await autoroleMgr.save(conf);
-        } else if (customId === 'autorole_toggle_bot') {
-          conf.bot = !conf.bot;
-          await autoroleMgr.save(conf);
-        } else if (customId === 'autorole_roles_select' && componentInteraction.isRoleSelectMenu()) {
-          conf.rolesIds = componentInteraction.values;
-          await autoroleMgr.save(conf);
-        }
-      }
-
-      // --- MEMBER COUNTER ---
-      if (currentView === 'counter') {
-        const conf = await counterMgr.get();
-        if (customId === 'counter_toggle') {
-          conf.enabled = !conf.enabled;
-          await counterMgr.save(conf);
-        } else if (customId === 'counter_channel_select' && componentInteraction.isChannelSelectMenu()) {
-          conf.channelId = componentInteraction.values[0];
-          await counterMgr.save(conf);
-        } else if (customId === 'counter_edit_format') {
-          const modal = new ModalBuilder()
-            .setCustomId('counter_modal')
-            .setTitle("Format du compteur de membres");
-
-          const formatInput = new TextInputBuilder()
-            .setCustomId('counter_format_input')
-            .setLabel('Format (ex: {count} membres)')
-            .setStyle(TextInputStyle.Short)
-            .setValue(conf.format)
-            .setRequired(true)
-            .setPlaceholder("Ex: {count} Membres");
-
-          const row = new ActionRowBuilder<TextInputBuilder>().addComponents(formatInput);
-          modal.addComponents(row);
-
-          await componentInteraction.showModal(modal);
-
-          try {
-            const submission = await componentInteraction.awaitModalSubmit({
-              filter: (i) => i.customId === 'counter_modal' && i.user.id === interaction.user.id,
-              time: 60000,
-            });
-
-            conf.format = submission.fields.getTextInputValue('counter_format_input');
-            await counterMgr.save(conf);
-
-            await submission.deferUpdate();
-            const render = await renderView();
-            await interaction.editReply({
-              embeds: render.embeds,
-              components: render.components,
-            });
-          } catch (err) {
-            console.error('Modal counter timeout or error:', err);
-          }
-          return;
-        }
-      }
-
-      // --- AUTOMOD ---
-      if (currentView === 'automod') {
-        const conf = await automodMgr.get();
-        if (customId === 'automod_toggle_badwords') {
-          conf.badWordsEnabled = !conf.badWordsEnabled;
-          await automodMgr.save(conf);
-        } else if (customId === 'automod_toggle_crossspam') {
-          conf.crossSpamEnabled = !conf.crossSpamEnabled;
-          await automodMgr.save(conf);
-        } else if (customId === 'automod_channel_select' && componentInteraction.isChannelSelectMenu()) {
-          conf.modLogChannelId = componentInteraction.values[0];
-          await automodMgr.save(conf);
-        } else if (customId === 'automod_edit_threshold') {
-          const modal = new ModalBuilder()
-            .setCustomId('automod_modal')
-            .setTitle("Seuil d'avertissements Automod");
-
-          const thresholdInput = new TextInputBuilder()
-            .setCustomId('automod_threshold_input')
-            .setLabel("Nombre d'alertes avant action")
-            .setStyle(TextInputStyle.Short)
-            .setValue(conf.warnThreshold.toString())
-            .setRequired(true)
-            .setPlaceholder('Ex: 3');
-
-          const row = new ActionRowBuilder<TextInputBuilder>().addComponents(thresholdInput);
-          modal.addComponents(row);
-
-          await componentInteraction.showModal(modal);
-
-          try {
-            const submission = await componentInteraction.awaitModalSubmit({
-              filter: (i) => i.customId === 'automod_modal' && i.user.id === interaction.user.id,
-              time: 60000,
-            });
-
-            const parsedVal = parseInt(submission.fields.getTextInputValue('automod_threshold_input'), 10);
-            if (!isNaN(parsedVal) && parsedVal > 0) {
-              conf.warnThreshold = parsedVal;
-              await automodMgr.save(conf);
+            let modalValue = '';
+            if (conf.message.embeds && conf.message.embeds.length > 0) {
+              modalValue = JSON.stringify(conf.message, null, 2);
+            } else {
+              modalValue = conf.message.content || '';
             }
 
-            await submission.deferUpdate();
-            const render = await renderView();
-            await interaction.editReply({
-              embeds: render.embeds,
-              components: render.components,
-            });
-          } catch (err) {
-            console.error('Modal automod timeout or error:', err);
+            const messageInput = new TextInputBuilder()
+              .setCustomId('welcome_text_input')
+              .setLabel('Texte simple ou JSON complet')
+              .setStyle(TextInputStyle.Paragraph)
+              .setValue(modalValue)
+              .setRequired(true)
+              .setPlaceholder(
+                'Ex: Bienvenue %username% ou {"content": "Bienvenue", "embeds": [{"title": "Bienvenue"}]}'
+              );
+
+            const row = new ActionRowBuilder<TextInputBuilder>().addComponents(messageInput);
+            modal.addComponents(row);
+
+            await componentInteraction.showModal(modal);
+
+            try {
+              const submission = await componentInteraction.awaitModalSubmit({
+                filter: (i) => i.customId === 'welcome_modal' && i.user.id === interaction.user.id,
+                time: 120000,
+              });
+
+              const text = submission.fields.getTextInputValue('welcome_text_input');
+              const trimmed = text.trim();
+              let parseError = false;
+
+              if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                try {
+                  const parsed = JSON.parse(trimmed) as Record<string, unknown>;
+                  if (parsed && typeof parsed === 'object') {
+                    const contentVal = typeof parsed.content === 'string' ? parsed.content : '';
+                    const embedsVal = Array.isArray(parsed.embeds)
+                      ? (parsed.embeds as unknown as APIEmbed[])
+                      : [];
+
+                    if ('content' in parsed || 'embeds' in parsed) {
+                      conf.message = {
+                        content: contentVal,
+                        embeds: embedsVal,
+                      };
+                    } else {
+                      conf.message = {
+                        content: '',
+                        embeds: [parsed as unknown as APIEmbed],
+                      };
+                    }
+                  } else {
+                    conf.message = {
+                      content: text,
+                      embeds: [],
+                    };
+                  }
+                } catch {
+                  parseError = true;
+                  await submission.reply({
+                    content: '❌ Le JSON fourni est invalide. Veuillez vérifier la syntaxe.',
+                    flags: MessageFlags.Ephemeral,
+                  });
+                }
+              } else {
+                conf.message = {
+                  content: text,
+                  embeds: [],
+                };
+              }
+
+              if (!parseError) {
+                await welcomeMgr.save(conf);
+                await submission.deferUpdate();
+                const render = await renderView();
+                await interaction.editReply({
+                  embeds: render.embeds,
+                  components: render.components,
+                });
+              }
+            } catch (err) {
+              console.error('Modal welcome timeout or error:', err);
+            }
+            return;
           }
-          return;
         }
-      }
 
-      // --- MODLOG ---
-      if (currentView === 'modlog') {
-        const conf = await modlogMgr.get();
-        if (customId === 'modlog_toggle') {
-          conf.enabled = !conf.enabled;
-          await modlogMgr.save(conf);
-        } else if (customId === 'modlog_channel_select' && componentInteraction.isChannelSelectMenu()) {
-          conf.channelId = componentInteraction.values[0];
-          await modlogMgr.save(conf);
+        // --- AUTO-VOICE ---
+        if (currentView === 'autovoice') {
+          const conf = await autovoiceMgr.get();
+          if (customId === 'autovoice_toggle') {
+            conf.enabled = !conf.enabled;
+            await autovoiceMgr.save(conf);
+          } else if (
+            customId === 'autovoice_channels_select' &&
+            componentInteraction.isChannelSelectMenu()
+          ) {
+            conf.channelsIds = componentInteraction.values;
+            await autovoiceMgr.save(conf);
+          } else if (
+            customId === 'autovoice_category_select' &&
+            componentInteraction.isChannelSelectMenu()
+          ) {
+            conf.tempCategory = componentInteraction.values[0];
+            await autovoiceMgr.save(conf);
+          } else if (customId === 'autovoice_edit_format') {
+            const modal = new ModalBuilder()
+              .setCustomId('autovoice_modal')
+              .setTitle('Format du salon Auto-Voice');
+
+            const formatInput = new TextInputBuilder()
+              .setCustomId('autovoice_format_input')
+              .setLabel('Format du nom du salon')
+              .setStyle(TextInputStyle.Short)
+              .setValue(conf.format)
+              .setRequired(true)
+              .setPlaceholder('Ex: Salon de %user%');
+
+            const row = new ActionRowBuilder<TextInputBuilder>().addComponents(formatInput);
+            modal.addComponents(row);
+
+            await componentInteraction.showModal(modal);
+
+            try {
+              const submission = await componentInteraction.awaitModalSubmit({
+                filter: (i) =>
+                  i.customId === 'autovoice_modal' && i.user.id === interaction.user.id,
+                time: 60000,
+              });
+
+              conf.format = submission.fields.getTextInputValue('autovoice_format_input');
+              await autovoiceMgr.save(conf);
+
+              await submission.deferUpdate();
+              const render = await renderView();
+              await interaction.editReply({
+                embeds: render.embeds,
+                components: render.components,
+              });
+            } catch (err) {
+              console.error('Modal autovoice timeout or error:', err);
+            }
+            return;
+          }
         }
-      }
 
-      // Refresh view for any other interactions
-      const render = await renderView();
-      await componentInteraction.update({
-        embeds: render.embeds,
-        components: render.components,
-      });
+        // --- AUTO-ROLE ---
+        if (currentView === 'autorole') {
+          const conf = await autoroleMgr.get();
+          if (customId === 'autorole_toggle') {
+            conf.enabled = !conf.enabled;
+            await autoroleMgr.save(conf);
+          } else if (customId === 'autorole_toggle_bot') {
+            conf.bot = !conf.bot;
+            await autoroleMgr.save(conf);
+          } else if (
+            customId === 'autorole_roles_select' &&
+            componentInteraction.isRoleSelectMenu()
+          ) {
+            conf.rolesIds = componentInteraction.values;
+            await autoroleMgr.save(conf);
+          }
+        }
+
+        // --- MEMBER COUNTER ---
+        if (currentView === 'counter') {
+          const conf = await counterMgr.get();
+          if (customId === 'counter_toggle') {
+            conf.enabled = !conf.enabled;
+            await counterMgr.save(conf);
+          } else if (
+            customId === 'counter_channel_select' &&
+            componentInteraction.isChannelSelectMenu()
+          ) {
+            conf.channelId = componentInteraction.values[0];
+            await counterMgr.save(conf);
+          } else if (customId === 'counter_edit_format') {
+            const modal = new ModalBuilder()
+              .setCustomId('counter_modal')
+              .setTitle('Format du compteur de membres');
+
+            const formatInput = new TextInputBuilder()
+              .setCustomId('counter_format_input')
+              .setLabel('Format (ex: {count} membres)')
+              .setStyle(TextInputStyle.Short)
+              .setValue(conf.format)
+              .setRequired(true)
+              .setPlaceholder('Ex: {count} Membres');
+
+            const row = new ActionRowBuilder<TextInputBuilder>().addComponents(formatInput);
+            modal.addComponents(row);
+
+            await componentInteraction.showModal(modal);
+
+            try {
+              const submission = await componentInteraction.awaitModalSubmit({
+                filter: (i) => i.customId === 'counter_modal' && i.user.id === interaction.user.id,
+                time: 60000,
+              });
+
+              conf.format = submission.fields.getTextInputValue('counter_format_input');
+              await counterMgr.save(conf);
+
+              await submission.deferUpdate();
+              const render = await renderView();
+              await interaction.editReply({
+                embeds: render.embeds,
+                components: render.components,
+              });
+            } catch (err) {
+              console.error('Modal counter timeout or error:', err);
+            }
+            return;
+          }
+        }
+
+        // --- AUTOMOD ---
+        if (currentView === 'automod') {
+          const conf = await automodMgr.get();
+          if (customId === 'automod_toggle_badwords') {
+            conf.badWordsEnabled = !conf.badWordsEnabled;
+            await automodMgr.save(conf);
+          } else if (customId === 'automod_toggle_crossspam') {
+            conf.crossSpamEnabled = !conf.crossSpamEnabled;
+            await automodMgr.save(conf);
+          } else if (
+            customId === 'automod_channel_select' &&
+            componentInteraction.isChannelSelectMenu()
+          ) {
+            conf.modLogChannelId = componentInteraction.values[0];
+            await automodMgr.save(conf);
+          } else if (customId === 'automod_edit_threshold') {
+            const modal = new ModalBuilder()
+              .setCustomId('automod_modal')
+              .setTitle("Seuil d'avertissements Automod");
+
+            const thresholdInput = new TextInputBuilder()
+              .setCustomId('automod_threshold_input')
+              .setLabel("Nombre d'alertes avant action")
+              .setStyle(TextInputStyle.Short)
+              .setValue(conf.warnThreshold.toString())
+              .setRequired(true)
+              .setPlaceholder('Ex: 3');
+
+            const row = new ActionRowBuilder<TextInputBuilder>().addComponents(thresholdInput);
+            modal.addComponents(row);
+
+            await componentInteraction.showModal(modal);
+
+            try {
+              const submission = await componentInteraction.awaitModalSubmit({
+                filter: (i) => i.customId === 'automod_modal' && i.user.id === interaction.user.id,
+                time: 60000,
+              });
+
+              const parsedVal = parseInt(
+                submission.fields.getTextInputValue('automod_threshold_input'),
+                10
+              );
+              if (!isNaN(parsedVal) && parsedVal > 0) {
+                conf.warnThreshold = parsedVal;
+                await automodMgr.save(conf);
+              }
+
+              await submission.deferUpdate();
+              const render = await renderView();
+              await interaction.editReply({
+                embeds: render.embeds,
+                components: render.components,
+              });
+            } catch (err) {
+              console.error('Modal automod timeout or error:', err);
+            }
+            return;
+          }
+        }
+
+        // --- MODLOG ---
+        if (currentView === 'modlog') {
+          const conf = await modlogMgr.get();
+          if (customId === 'modlog_toggle') {
+            conf.enabled = !conf.enabled;
+            await modlogMgr.save(conf);
+          } else if (
+            customId === 'modlog_channel_select' &&
+            componentInteraction.isChannelSelectMenu()
+          ) {
+            conf.channelId = componentInteraction.values[0];
+            await modlogMgr.save(conf);
+          }
+        }
+
+        // Refresh view for any other interactions
+        const render = await renderView();
+        await componentInteraction.update({
+          embeds: render.embeds,
+          components: render.components,
+        });
+      })();
     });
 
-    collector.on('end', async (_, reason) => {
-      if (reason === 'user_closed') {
-        await interaction.deleteReply().catch(() => {});
-      } else {
-        // Disable components on timeout
-        const render = await renderView();
-        render.components.forEach((row: any) => {
-          row.components.forEach((c: any) => {
-            if (typeof c.setDisabled === 'function') {
-              c.setDisabled(true);
+    collector.on('end', (_, reason) => {
+      void (async () => {
+        if (reason === 'user_closed') {
+          await interaction.deleteReply().catch(() => {});
+        } else {
+          // Disable components on timeout
+          const render = await renderView();
+          const disabledComponents = (render.components as unknown[]).map((rawRow) => {
+            const row = rawRow as Record<string, unknown>;
+            if (row && 'components' in row && Array.isArray(row.components)) {
+              const componentsArray = row.components as unknown[];
+              componentsArray.forEach((rawC) => {
+                const c = rawC as Record<string, unknown>;
+                if (c && 'setDisabled' in c && typeof c.setDisabled === 'function') {
+                  (c as { setDisabled: (disabled: boolean) => unknown }).setDisabled(true);
+                }
+              });
             }
+            return row;
           });
-        });
-        const disabledComponents = render.components;
 
-        await interaction
-          .editReply({
-            embeds: [
-              ...render.embeds,
-              new EmbedBuilder()
-                .setDescription('⏳ Cette interaction a expiré. Relancez la commande `/setup`.')
-                .setColor(0x7f8c8d),
-            ],
-            components: disabledComponents,
-          })
-          .catch(() => {});
-      }
+          await interaction
+            .editReply({
+              embeds: [
+                ...render.embeds,
+                new EmbedBuilder()
+                  .setDescription('⏳ Cette interaction a expiré. Relancez la commande `/setup`.')
+                  .setColor(0x7f8c8d),
+              ],
+              components: disabledComponents,
+            })
+            .catch(() => {});
+        }
+      })();
     });
   },
 };

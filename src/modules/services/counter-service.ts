@@ -8,11 +8,10 @@ export async function refreshCounter(guild: Guild, client: Client): Promise<bool
     const humanCount = members.filter((m) => !m.user.bot).size;
     const channel: VoiceChannel = <VoiceChannel>client.channels.cache.get(config.channelId);
     if (channel) {
-      const newName = config.format.replace('%count%', humanCount.toString());
+      const countStr = humanCount.toString();
+      const newName = config.format.replace(/{count}/g, countStr).replace(/%count%/g, countStr);
       if (channel.name !== newName) {
-        const newVoice = await channel.setName(
-          config.format.replace('%count%', humanCount.toString())
-        );
+        const newVoice = await channel.setName(newName);
         if (newVoice.name !== newName) return 'Change fail due to too many change !';
         return true;
       }
