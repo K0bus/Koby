@@ -1,0 +1,66 @@
+# Developer Rules and Architecture Guidelines for Koby Bot
+
+You are a Senior Discord Bot Developer working on the **Koby** project. Keep the following architecture, standards, and rules in mind when writing code, refactoring, or creating new features.
+
+---
+
+## 📁 Directory Structure & Architecture
+
+All code must adhere to the modular structure below:
+
+- **`src/bot/`**: Bot client initialization (`client.ts`) and global slash command registration (`register-commands.ts`).
+- **`src/config/`**: Configuration structures and defaults.
+  - **`base/`**: Base classes like `BaseConfig` and `GuildModuleConfig` which automatically load/save settings to the database.
+  - **`managers/`**: Module-specific config managers implementing schema shapes, fallback defaults, and validation.
+- **`src/db/`**: Database client wrapper (`prisma.service.ts`) and common settings operations (`guild-settings.service.ts`).
+- **`src/modules/`**: Feature-specific modules.
+  - **`base/`**: `BaseModule` abstract class.
+  - **`commands/`**: Subfolders per module containing Discord slash commands (type `BotCommand`).
+  - **`events/`**: Subfolders per module containing Discord event listeners (type `BotEvent`).
+  - **`services/`**: Independent business logic services that execute the actual tasks and query database/APIs.
+  - **`managers/`**: Module definition classes (e.g., `AutoroleModule`) that extend `BaseModule` and register their respective commands and events.
+  - **`index.ts`**: The central module loader where modules are instantiated and events/commands are hooked into the client.
+- **`src/types/`**: Common TS interfaces and types (`BotTypes.ts`, `ModuleConfig.ts`).
+- **`src/utils/`**: Shared utilities like message parsers, embed helpers (`Messager.ts`, `Parser.ts`), and type/shape validators (`validation.ts`).
+
+---
+
+## ⚙️ How to Add a New Module (Step-by-Step)
+
+Follow these steps exactly when creating a new feature/module:
+
+1. **Database Config (Optional)**: If the module needs settings per guild, create `src/config/managers/myfeature-config.ts` containing the settings interface and a config manager class extending `GuildModuleConfig<MyFeatureConfig>`. Set your fallback defaults.
+2. **Commands**: Create command files under `src/modules/commands/myfeature/`. Define commands of type `BotCommand`. Use the `SlashCommandBuilder` to build options.
+3. **Events**: Create event files under `src/modules/events/myfeature/`. Define events of type `BotEvent`. Specify the `eventType` (e.g. `Events.MessageCreate`) and `once: boolean`.
+4. **Service**: Create the core business logic in `src/modules/services/myfeature-service.ts`. Keep it reusable.
+5. **Module Manager**: Create `src/modules/managers/myfeature-module.ts` extending `BaseModule`. In the constructor, call `super('myFeature')` and register commands and events using `this.registerCommand()` and `this.registerEvent()`.
+6. **Register Globally**: Import your new module class in `src/modules/index.ts` and push a new instance of it to the `this.modules` array in the `ModuleManager` constructor.
+
+---
+
+## 💻 Coding Standards & Best Practices
+
+### 1. TypeScript & Strictness
+- Avoid using `any` unless absolutely necessary (like in library generics or event parameters array spreads).
+- Use proper type assertions where needed (e.g., `<GuildMember>interaction.member` or `channel.isTextBased()`).
+- Always specify return types on public functions and methods.
+
+### 2. Discord.js v14 Patterns
+- **Intents and Partials**: Ensure the bot uses the minimal necessary gateway intents. Check `src/bot/client.ts` if a new intent (like `GuildPresences`) is required.
+- **Permissions**: Always check permissions on command execution. Use `.setDefaultMemberPermissions(PermissionFlagsBits.Administrator)` or similar when registering commands.
+- **Ephemeral Responses**: Use `flags: MessageFlags.Ephemeral` (imported from `discord.js`) to reply privately for commands that don't need public logs.
+- **API Error Handling**: Always catch API calls that can fail (e.g. deleting channels, sending DMs, assigning roles) and log them safely or use `Messager.sendAPIError()`.
+
+### 3. Database & Prisma
+- Always use the `GuildSettingsService` for reading and writing module configs to avoid duplicate SQL code.
+- Ensure database modifications are done in a type-safe manner. Use Prisma's native methods and avoid raw SQL unless query performance demands it.
+- Keep the `GuildSetting` table generic by using the `settingValue Json?` column and performing validation with `isSameShape`.
+
+---
+
+## ⚠️ Architectural Recommendations & Pitfalls to Avoid
+
+- **⚠️ Command Listener Bottleneck**: The current `loadModules` function in `src/modules/index.ts` registers a new `Events.InteractionCreate` event listener *for each command*. This is inefficient ($O(N)$ listeners, where $N$ is the number of commands). 
+  - *Recommendation*: Refactor command execution to use a single `Events.InteractionCreate` listener that routes commands through a registry map (like `Collection<string, BotCommand>`).
+- **⚠️ Unused BotClient Class**: The `BotClient` class is defined in `src/types/BotTypes.ts` but never instantiated. The client is created using the standard `Client` class.
+  - *Recommendation*: Use `new BotClient(options)` instead of `new Client(options)` in `src/bot/client.ts` so that registered modules can be directly attached to the client instance.
