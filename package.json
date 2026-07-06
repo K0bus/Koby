@@ -13,7 +13,7 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "prisma:generate": "npx prisma generate",
     "prisma:migrate": "npx prisma migrate deploy",
-    "prisma:deploy": "npm run prisma:generate && npm run prisma:migrate && npm run start",
+    "prisma:deploy": "npm run prisma:generate && npm run prisma:migrate",
     "dev:docker": "docker-compose -f docker-compose.dev.yml up --build"
   },
   "keywords": [],

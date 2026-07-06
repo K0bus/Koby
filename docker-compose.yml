@@ -9,8 +9,6 @@ services:
       POSTGRES_USER: koby
       POSTGRES_PASSWORD: supersecurepassword
       POSTGRES_DB: kobydb
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
