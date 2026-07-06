@@ -489,12 +489,28 @@ export const setup: BotCommand = {
                 try {
                   const parsed = JSON.parse(trimmed) as Record<string, unknown>;
                   if (parsed && typeof parsed === 'object') {
-                    const contentVal = typeof parsed.content === 'string' ? parsed.content : '';
-                    const embedsVal = Array.isArray(parsed.embeds)
-                      ? (parsed.embeds as unknown as APIEmbed[])
+                    let messageObj = parsed;
+
+                    // Check if the user passed the whole WelcomeConfig structure
+                    if (
+                      'message' in parsed &&
+                      parsed.message &&
+                      typeof parsed.message === 'object'
+                    ) {
+                      messageObj = parsed.message as Record<string, unknown>;
+                      // Extract other settings if present
+                      if (typeof parsed.enabled === 'boolean') conf.enabled = parsed.enabled;
+                      if (typeof parsed.bot === 'boolean') conf.bot = parsed.bot;
+                      if (typeof parsed.channelId === 'string') conf.channelId = parsed.channelId;
+                    }
+
+                    const contentVal =
+                      typeof messageObj.content === 'string' ? messageObj.content : '';
+                    const embedsVal = Array.isArray(messageObj.embeds)
+                      ? (messageObj.embeds as unknown as APIEmbed[])
                       : [];
 
-                    if ('content' in parsed || 'embeds' in parsed) {
+                    if ('content' in messageObj || 'embeds' in messageObj) {
                       conf.message = {
                         content: contentVal,
                         embeds: embedsVal,
@@ -502,7 +518,7 @@ export const setup: BotCommand = {
                     } else {
                       conf.message = {
                         content: '',
-                        embeds: [parsed as unknown as APIEmbed],
+                        embeds: [messageObj as unknown as APIEmbed],
                       };
                     }
                   } else {

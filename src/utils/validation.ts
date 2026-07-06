@@ -12,9 +12,7 @@ export function isMessageCreateOptions(obj: unknown): obj is MessageCreateOption
   const hasEmbeds =
     !message.embeds ||
     (Array.isArray(message.embeds) &&
-      message.embeds.every(
-        (e) => typeof e === 'object' && e !== null && ('title' in e || 'description' in e)
-      ));
+      message.embeds.every((e) => typeof e === 'object' && e !== null));
 
   return hasContent && hasEmbeds;
 }
