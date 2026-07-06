@@ -1,4 +1,7 @@
 import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   CategoryChannel,
   ChannelType,
   Client,
@@ -10,9 +13,64 @@ import {
 } from 'discord.js';
 import { AutoVoiceConfig, AutoVoiceConfigManager } from '../../config/managers/autovoice-config';
 
-const EMBED_COLOR = 0x00aaff;
-const OWNER_FIELD_CHANNEL = 'Salon';
-const OWNER_FIELD_NAME = 'Propriétaire';
+export const EMBED_COLOR = 0x00aaff;
+export const OWNER_FIELD_CHANNEL = 'Salon';
+export const OWNER_FIELD_NAME = 'Propriétaire';
+
+export function getChannelControls(): ActionRowBuilder<ButtonBuilder>[] {
+  const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId('autovoice_lock')
+      .setLabel('Verrouiller')
+      .setEmoji('🔒')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId('autovoice_unlock')
+      .setLabel('Déverrouiller')
+      .setEmoji('🔓')
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId('autovoice_hide')
+      .setLabel('Masquer')
+      .setEmoji('🙈')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId('autovoice_unhide')
+      .setLabel('Afficher')
+      .setEmoji('👁️')
+      .setStyle(ButtonStyle.Secondary)
+  );
+
+  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId('autovoice_rename')
+      .setLabel('Renommer')
+      .setEmoji('📝')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId('autovoice_limit')
+      .setLabel('Limite')
+      .setEmoji('👥')
+      .setStyle(ButtonStyle.Primary),
+    new ButtonBuilder()
+      .setCustomId('autovoice_trust')
+      .setLabel('Autoriser')
+      .setEmoji('🛡️')
+      .setStyle(ButtonStyle.Success),
+    new ButtonBuilder()
+      .setCustomId('autovoice_kick')
+      .setLabel('Expulser')
+      .setEmoji('🚷')
+      .setStyle(ButtonStyle.Danger),
+    new ButtonBuilder()
+      .setCustomId('autovoice_claim')
+      .setLabel('Réclamer')
+      .setEmoji('👑')
+      .setStyle(ButtonStyle.Success)
+  );
+
+  return [row1, row2];
+}
 
 export async function handleVoiceJoin(
   client: Client,
@@ -54,7 +112,9 @@ async function sendTempChannelEmbed(channel: VoiceChannel, owner: GuildMember) {
     .setTimestamp()
     .setColor(EMBED_COLOR);
 
-  await channel.send({ embeds: [embed] });
+  const components = getChannelControls();
+
+  await channel.send({ embeds: [embed], components });
 }
 
 export async function handleVoiceLeave(
@@ -78,7 +138,10 @@ export async function handleVoiceLeave(
   }
 }
 
-async function fetchOwnerId(channel: VoiceChannel | StageChannel, client: Client): Promise<string> {
+export async function fetchOwnerId(
+  channel: VoiceChannel | StageChannel,
+  client: Client
+): Promise<string> {
   const messages = await channel.messages.fetch();
   const botMessage = messages.find((msg) => msg.author.id === client.user?.id);
   if (!botMessage?.embeds[0]) return '';
@@ -87,7 +150,7 @@ async function fetchOwnerId(channel: VoiceChannel | StageChannel, client: Client
   return ownerField?.value.replace(/[<@>]/g, '') || '';
 }
 
-async function updateChannelOwnership(channel: VoiceChannel | StageChannel, client: Client) {
+export async function updateChannelOwnership(channel: VoiceChannel | StageChannel, client: Client) {
   const newOwner = channel.members.first();
   if (!newOwner) return;
 
