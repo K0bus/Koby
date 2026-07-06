@@ -14,6 +14,8 @@ export function createClient(bot: Bot) {
     partials: [Partials.Channel],
   });
 
+  client.setMaxListeners(25);
+
   client.once(Events.ClientReady, (c) => {
     console.log(`[${c.user.tag}] ✅ Logged in`);
     // Set status
