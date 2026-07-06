@@ -6,6 +6,7 @@ import { CounterModule } from './managers/counter-module';
 import { ModlogModule } from './managers/modlog-module';
 import { SimplecommandsModule } from './managers/simplecommands-module';
 import { WelcomemessageModule } from './managers/welcomemessage-module';
+import { AutomodModule } from './managers/automod-module';
 import { Client, Events, MessageFlags } from 'discord.js';
 
 export class ModuleManager {
@@ -17,6 +18,7 @@ export class ModuleManager {
     this.modules.push(new ModlogModule());
     this.modules.push(new SimplecommandsModule());
     this.modules.push(new WelcomemessageModule());
+    this.modules.push(new AutomodModule());
   }
   list(): BotModule[] {
     return this.modules;
