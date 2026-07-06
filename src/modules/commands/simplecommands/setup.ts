@@ -15,6 +15,7 @@ import {
   TextInputStyle,
   ChannelType,
   EmbedBuilder,
+  APIEmbed,
 } from 'discord.js';
 import { WelcomeConfigManager } from '../../../config/managers/welcome-config';
 import { AutoVoiceConfigManager } from '../../../config/managers/autovoice-config';
@@ -783,7 +784,7 @@ export const setup: BotCommand = {
                   .setDescription('⏳ Cette interaction a expiré. Relancez la commande `/setup`.')
                   .setColor(0x7f8c8d),
               ],
-              components: disabledComponents,
+              components: disabledComponents as any[],
             })
             .catch(() => {});
         }
